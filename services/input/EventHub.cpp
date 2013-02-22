@@ -1076,7 +1076,6 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
             && test_bit(ABS_X, device->absBitmask)
             && test_bit(ABS_Y, device->absBitmask)) {
         device->classes |= INPUT_DEVICE_CLASS_TOUCH;
-        device->classes |= INPUT_DEVICE_CLASS_CURSOR;
     }
 
     // See if this device is a joystick.
