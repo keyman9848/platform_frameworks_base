@@ -5288,7 +5288,7 @@ void TouchInputMapper::dispatchPointerAbsoluteMouse(nsecs_t when, uint32_t polic
 
         //rotateDelta(mSurfaceOrientation, &cx, &cy);
  
-        ALOGE("orientation=%d scale=%fx%f pos=%fx%f", orient, xscale, yscale, cx, cy);
+        //ALOGE("orientation=%d scale=%fx%f pos=%fx%f", orient, xscale, yscale, cx, cy);
 
         mPointerController->setPosition(cx, cy);
 
