@@ -27,7 +27,9 @@ LOCAL_C_INCLUDES += \
     libcore/include/libsuspend \
 	$(call include-path-for, libhardware)/hardware \
 	$(call include-path-for, libhardware_legacy)/hardware_legacy \
-    device/androVM/common/system/genyd
+    device/androVM/common/system/genyd/lib \
+    bionic \
+    external/stlport/stlport
 
 LOCAL_SHARED_LIBRARIES := \
     libandroid_runtime \
