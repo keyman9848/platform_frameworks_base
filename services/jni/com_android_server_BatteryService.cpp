@@ -140,9 +140,10 @@ static int readFromFile(const char* path, char* buf, size_t size)
     if (!path)
         return -1;
 
-    size_t ssize = Genymotion::getValueFromProc(path, buf, size);
-    if (ssize > 0)
-	return ssize;
+    int geny_result = Genymotion::getValueFromProc(path, buf, size);
+    if (geny_result != -1) {
+	return geny_result;
+    }
 
     int fd = open(path, O_RDONLY, 0);
     if (fd == -1) {
