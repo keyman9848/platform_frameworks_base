@@ -34,7 +34,7 @@
 #include <dirent.h>
 #include <linux/ioctl.h>
 
-#include <genymotion.hpp>
+#include <libgenyd.hpp>
 
 namespace android {
 
@@ -158,7 +158,7 @@ static int readFromFile(const char* path, char* buf, size_t size)
     close(fd);
 
     // Have we got an overloaded value ?
-    int geny_result = Genymotion::getValueFromProc(path, buf, size);
+    int geny_result = LibGenyd::getValueFromProc(path, buf, size);
     if (geny_result != -1) {
 	return geny_result;
     }
