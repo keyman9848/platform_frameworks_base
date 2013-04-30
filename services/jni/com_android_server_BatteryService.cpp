@@ -157,9 +157,6 @@ static int readFromFile(const char* path, char* buf, size_t size)
 
     close(fd);
 
-    // Store current value to Genymotion cache
-    Genymotion::storeCurrentValue(path, buf, size);
-
     // Have we got an overloaded value ?
     int geny_result = Genymotion::getValueFromProc(path, buf, size);
     if (geny_result != -1) {
