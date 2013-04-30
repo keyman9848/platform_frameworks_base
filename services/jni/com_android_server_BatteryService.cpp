@@ -140,11 +140,6 @@ static int readFromFile(const char* path, char* buf, size_t size)
     if (!path)
         return -1;
 
-    int geny_result = Genymotion::getValueFromProc(path, buf, size);
-    if (geny_result != -1) {
-	return geny_result;
-    }
-
     int fd = open(path, O_RDONLY, 0);
     if (fd == -1) {
         ALOGE("Could not open '%s'", path);
@@ -161,6 +156,16 @@ static int readFromFile(const char* path, char* buf, size_t size)
     }
 
     close(fd);
+
+    // Store current value to Genymotion cache
+    Genymotion::storeCurrentValue(path, buf, size);
+
+    // Have we got an overloaded value ?
+    int geny_result = Genymotion::getValueFromProc(path, buf, size);
+    if (geny_result != -1) {
+	return geny_result;
+    }
+
     return count;
 }
 
