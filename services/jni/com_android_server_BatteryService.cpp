@@ -140,6 +140,11 @@ static int readFromFile(const char* path, char* buf, size_t size)
     if (!path)
         return -1;
 
+    // If the file path is a fake one, override value completely
+    if (LibGenyd::useFakeValue(path, buf, size) > 0) {
+	return strlen(buf);
+    }
+
     int fd = open(path, O_RDONLY, 0);
     if (fd == -1) {
         ALOGE("Could not open '%s'", path);
@@ -157,7 +162,7 @@ static int readFromFile(const char* path, char* buf, size_t size)
 
     close(fd);
 
-    // Have we got an overloaded value ?
+    // Cache value and use real or overloaded one
     int geny_result = LibGenyd::getValueFromProc(path, buf, size);
     if (geny_result != -1) {
 	return geny_result;
@@ -368,6 +373,24 @@ int register_android_server_BatteryService(JNIEnv* env)
         ALOGE("batteryTemperaturePath not found");
     if (!gPaths.batteryTechnologyPath)
         ALOGE("batteryTechnologyPath not found");
+
+    // If battery is not present, we must override every usefull paths with fake
+    // ones to disable /sys/class/power_supply host values
+    if (!gPaths.batteryPresentPath) {
+        // Free every potential strduped values
+        free(gPaths.acOnlinePath);
+        free(gPaths.batteryStatusPath);
+        free(gPaths.batteryEnergyNowPath);
+        free(gPaths.batteryEnergyFullPath);
+
+        ALOGI("overriding Battery service paths with fake ones");
+
+        gPaths.acOnlinePath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/online");
+        gPaths.batteryPresentPath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/present");
+        gPaths.batteryStatusPath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/status");
+        gPaths.batteryEnergyNowPath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/energy_now");
+        gPaths.batteryEnergyFullPath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/energy_full");
+    }
 
     jclass clazz = env->FindClass("com/android/server/BatteryService");
 
