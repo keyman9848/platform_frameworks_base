@@ -3680,6 +3680,31 @@ void TouchInputMapper::sync(nsecs_t when) {
             dispatchHoverExit(when, policyFlags);
             dispatchTouches(when, policyFlags);
             dispatchHoverEnterAndMove(when, policyFlags);
+
+            if (mCurrentRawVScroll || mCurrentRawHScroll) {
+                int32_t metaState = mContext->getGlobalMetaState();
+
+                float vscroll = mCurrentRawVScroll;
+                float hscroll = mCurrentRawHScroll;
+
+                // Send scroll.
+                struct PointerSimple lPointerSimple;
+                memcpy(&lPointerSimple, &mPointerSimple, sizeof(mPointerSimple));
+                lPointerSimple.currentCoords.copyFrom(mCurrentCookedPointerData.pointerCoords[0]);
+                lPointerSimple.currentProperties.id = 0;
+
+                PointerCoords pointerCoords;
+                pointerCoords.copyFrom(lPointerSimple.currentCoords);
+                pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, vscroll);
+                pointerCoords.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, hscroll);
+
+                NotifyMotionArgs args(when, getDeviceId(), mSource, policyFlags,
+                        AMOTION_EVENT_ACTION_SCROLL, 0, metaState, mCurrentButtonState, 0,
+                        1, &lPointerSimple.currentProperties, &pointerCoords,
+                        mOrientedXPrecision, mOrientedYPrecision,
+                        lPointerSimple.downTime);
+                getListener()->notifyMotion(&args);
+            }
         }
 
         // Synthesize key up from raw buttons if needed.
@@ -5805,7 +5830,7 @@ void SingleTouchInputMapper::process(const RawEvent* rawEvent) {
 }
 
 void SingleTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
-    if (mTouchButtonAccumulator.isToolActive()) {
+    if ((mTouchButtonAccumulator.isToolActive()) || (mCurrentRawVScroll || mCurrentRawHScroll)) {
         mCurrentRawPointerData.pointerCount = 1;
         mCurrentRawPointerData.idToIndex[0] = 0;
 
