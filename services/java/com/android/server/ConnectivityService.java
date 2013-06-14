@@ -797,6 +797,7 @@ public class ConnectivityService extends IConnectivityManager.Stub {
      */
     private NetworkInfo getFilteredNetworkInfo(NetworkStateTracker tracker, int uid) {
         NetworkInfo info = tracker.getNetworkInfo();
+
         if (isNetworkBlocked(tracker, uid)) {
             // network is blocked; clone and override state
             info = new NetworkInfo(info);
@@ -848,6 +849,7 @@ public class ConnectivityService extends IConnectivityManager.Stub {
 
     private NetworkInfo getNetworkInfo(int networkType, int uid) {
         NetworkInfo info = null;
+
         if (isNetworkTypeValid(networkType)) {
             final NetworkStateTracker tracker = mNetTrackers[networkType];
             if (tracker != null) {

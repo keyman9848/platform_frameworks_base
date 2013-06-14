@@ -307,6 +307,9 @@ public final class PowerManagerService extends IPowerManager.Stub
     // A bitfield of battery conditions under which to make the screen stay on.
     private int mStayOnWhilePluggedInSetting;
 
+    // The stay always on setting
+    private int mStayOnAlwaysSetting;
+
     // True if the device should stay on.
     private boolean mStayOn;
 
@@ -530,6 +533,8 @@ public final class PowerManagerService extends IPowerManager.Stub
                 UserHandle.USER_CURRENT);
         mStayOnWhilePluggedInSetting = Settings.Global.getInt(resolver,
                 Settings.Global.STAY_ON_WHILE_PLUGGED_IN, BatteryManager.BATTERY_PLUGGED_AC);
+        mStayOnAlwaysSetting = Settings.Global.getInt(resolver,
+                Settings.Global.STAY_ON_ALWAYS, 1);
 
         final int oldScreenBrightnessSetting = mScreenBrightnessSetting;
         mScreenBrightnessSetting = Settings.System.getIntForUser(resolver,
@@ -1207,7 +1212,10 @@ public final class PowerManagerService extends IPowerManager.Stub
     private void updateStayOnLocked(int dirty) {
         if ((dirty & (DIRTY_BATTERY_STATE | DIRTY_SETTINGS)) != 0) {
             final boolean wasStayOn = mStayOn;
-            if (mStayOnWhilePluggedInSetting != 0
+            if (mStayOnAlwaysSetting != 0) {
+                mStayOn = true;
+            }
+            else if (mStayOnWhilePluggedInSetting != 0
                     && !isMaximumScreenOffTimeoutFromDeviceAdminEnforcedLocked()) {
                 mStayOn = mBatteryService.isPowered(mStayOnWhilePluggedInSetting);
             } else {
@@ -2213,6 +2221,7 @@ public final class PowerManagerService extends IPowerManager.Stub
                     + mMaximumScreenOffTimeoutFromDeviceAdmin + " (enforced="
                     + isMaximumScreenOffTimeoutFromDeviceAdminEnforcedLocked() + ")");
             pw.println("  mStayOnWhilePluggedInSetting=" + mStayOnWhilePluggedInSetting);
+            pw.println("  mStayOnAlwaysSetting=" + mStayOnAlwaysSetting);
             pw.println("  mScreenBrightnessSetting=" + mScreenBrightnessSetting);
             pw.println("  mScreenAutoBrightnessAdjustmentSetting="
                     + mScreenAutoBrightnessAdjustmentSetting);

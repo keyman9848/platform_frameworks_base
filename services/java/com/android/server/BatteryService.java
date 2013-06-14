@@ -161,6 +161,7 @@ public final class BatteryService extends Binder {
                 com.android.internal.R.integer.config_shutdownBatteryTemperature);
 
         mPowerSupplyObserver.startObserving("SUBSYSTEM=power_supply");
+	batteryinfo_poll_thread.start();
 
         // watch for invalid charger messages if the invalid_charger switch exists
         if (new File("/sys/devices/virtual/switch/invalid_charger/state").exists()) {
@@ -670,6 +671,22 @@ public final class BatteryService extends Binder {
                 }
             }
         }
+    };
+
+    private Thread batteryinfo_poll_thread = new Thread() {
+	@Override
+        public void run() {
+            try {
+              	while (true) {
+		    sleep(30000);
+                    synchronized (mLock) {
+                        updateLocked();
+                    }
+		}
+	    } catch (InterruptedException e) {
+		e.printStackTrace();
+	    }
+	}	
     };
 
     private final class Led {
