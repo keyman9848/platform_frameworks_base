@@ -3778,6 +3778,7 @@ void TouchInputMapper::sync(nsecs_t when) {
 
                 NotifyMotionArgs args(when, getDeviceId(), mSource, policyFlags,
                         AMOTION_EVENT_ACTION_SCROLL, 0, metaState, mCurrentButtonState, 0,
+                        mViewport.displayId,
                         1, &lPointerSimple.currentProperties, &pointerCoords,
                         mOrientedXPrecision, mOrientedYPrecision,
                         lPointerSimple.downTime);
