@@ -1414,6 +1414,12 @@ public final class Settings {
 	public static final String STAY_ON_ALWAYS = Global.STAY_ON_ALWAYS;
 
         /**
+         * STAY_ON_ALWAYS will always make the screen on
+         * @hide
+         */
+	public static final String STAY_ON_ALWAYS = "stay_on_always";
+
+        /**
          * What happens when the user presses the end call button if they're not
          * on a call.<br/>
          * <b>Values:</b><br/>

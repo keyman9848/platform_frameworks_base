@@ -82,7 +82,7 @@ public final class BatteryService extends Binder {
     private static final boolean DEBUG = false;
 
     private static final int BATTERY_SCALE = 100;    // battery capacity is a percentage
-
+    private static final int BATTERY_REFRESH = 5;  // battery refresh periode in seconds
     // Used locally for determining when to make a last ditch effort to log
     // discharge stats before the device dies.
     private int mCriticalBatteryLevel;
@@ -678,7 +678,7 @@ public final class BatteryService extends Binder {
         public void run() {
             try {
               	while (true) {
-		    sleep(30000);
+		    sleep(BATTERY_REFRESH * 1000);
                     synchronized (mLock) {
                         updateLocked();
                     }
