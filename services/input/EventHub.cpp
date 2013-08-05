@@ -1160,17 +1160,20 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
     if (device->classes & (INPUT_DEVICE_CLASS_KEYBOARD | INPUT_DEVICE_CLASS_ALPHAKEY)) {
         char ignkeyb_property[PROPERTY_VALUE_MAX];
 
-        if (property_get("androVM.keyboard_disable", ignkeyb_property, NULL) > 0) {
+        if (property_get("androVM.vkeyboard_mode", ignkeyb_property, NULL) > 0) {
             int ignkeyb = atoi(ignkeyb_property);
 
-            ALOGI("keyboard disable is |%s] [%d]\n", ignkeyb_property, ignkeyb);
+            ALOGI("Virtual keyboard mode is |%s] [%d]\n", ignkeyb_property, ignkeyb);
             switch (ignkeyb) {
-             case 1:
+            case 0: // Hardware mode
+                ALOGI("Vrtual keyboard is set to Hardware mode\n");
+                break;
+            case 1: // Software mode
                 ALOGI("ignoring event id %s because keyboard disabled by androVM configuration\n", devicePath);
                 close(fd);
                 return -1;
                 break;
-             case 2:
+            case 2: // Software + Hotkeys mode
                 ALOGI("removing ALPHAKEY class from %s\n", devicePath);
                 device->classes &= 0xFFFF & ~INPUT_DEVICE_CLASS_ALPHAKEY;
                 ALOGI("new device class: %d\n", device->classes);
@@ -1307,7 +1310,7 @@ bool EventHub::hasKeycodeLocked(Device* device, int keycode) const {
     if (!device->keyMap.haveKeyLayout() || !device->keyBitmask) {
         return false;
     }
-    
+
     Vector<int32_t> scanCodes;
     device->keyMap.keyLayoutMap->findScanCodesForKey(keycode, &scanCodes);
     const size_t N = scanCodes.size();
@@ -1317,7 +1320,7 @@ bool EventHub::hasKeycodeLocked(Device* device, int keycode) const {
             return true;
         }
     }
-    
+
     return false;
 }
 
