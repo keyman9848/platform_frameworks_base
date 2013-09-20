@@ -275,7 +275,7 @@ int register_android_server_BatteryService(JNIEnv* env)
 
     DIR* dir = opendir(POWER_SUPPLY_PATH);
     if (dir == NULL) {
-        ALOGE("Could not open %s\n", POWER_SUPPLY_PATH);
+        // ALOGE("Could not open %s\n", POWER_SUPPLY_PATH);
     } else {
         while ((entry = readdir(dir))) {
             const char* name = entry->d_name;
