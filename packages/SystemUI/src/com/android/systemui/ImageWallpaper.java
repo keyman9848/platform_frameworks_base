@@ -88,7 +88,8 @@ public class ImageWallpaper extends WallpaperService {
     }
 
     private static boolean isEmulator() {
-        return "1".equals(SystemProperties.get(PROPERTY_KERNEL_QEMU, "0"));
+        //return "1".equals(SystemProperties.get(PROPERTY_KERNEL_QEMU, "0"));
+        return true;
     }
 
     @Override

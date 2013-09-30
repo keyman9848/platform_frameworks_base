@@ -36,6 +36,8 @@
 #include <utils/Vector.h>
 #include <utils/String8.h>
 
+#include <libgenyd.hpp>
+
 namespace android {
 
 #define POWER_SUPPLY_PATH "/sys/class/power_supply"
@@ -79,6 +81,8 @@ struct PowerSupplyPaths {
     String8 batteryVoltagePath;
     String8 batteryTemperaturePath;
     String8 batteryTechnologyPath;
+    String8 batteryEnergyNowPath;
+    String8 batteryEnergyFullPath;
 };
 static PowerSupplyPaths gPaths;
 
@@ -102,7 +106,7 @@ static jint getBatteryStatus(const char* status)
         case 'F': return gConstants.statusFull;             // Full
         case 'N': return gConstants.statusNotCharging;      // Not charging
         case 'U': return gConstants.statusUnknown;          // Unknown
-            
+
         default: {
             ALOGW("Unknown battery status '%s'", status);
             return gConstants.statusUnknown;
@@ -125,7 +129,7 @@ static jint getBatteryHealth(const char* status)
             ALOGW("Unknown battery health[1] '%s'", status);
             return gConstants.healthUnknown;
         }
-        
+
         case 'U': {
             if (strcmp(status, "Unspecified failure") == 0) {
                 return gConstants.healthUnspecifiedFailure;
@@ -134,7 +138,7 @@ static jint getBatteryHealth(const char* status)
             }
             // fall through
         }
-            
+
         default: {
             ALOGW("Unknown battery health[2] '%s'", status);
             return gConstants.healthUnknown;
@@ -146,6 +150,12 @@ static int readFromFile(const String8& path, char* buf, size_t size)
 {
     if (path.isEmpty())
         return -1;
+
+    // If the file path is a fake one, override value completely
+    if (LibGenyd::useFakeValue(path, buf, size) > 0) {
+       return strlen(buf);
+    }
+
     int fd = open(path.string(), O_RDONLY, 0);
     if (fd == -1) {
         ALOGE("Could not open '%s'", path.string());
@@ -159,9 +169,16 @@ static int readFromFile(const String8& path, char* buf, size_t size)
         buf[count] = '\0';
     } else {
         buf[0] = '\0';
-    } 
+    }
 
     close(fd);
+
+    // Cache value and use real or overloaded one
+    int geny_result = LibGenyd::getValueFromProc(path, buf, size);
+    if (geny_result != -1) {
+	return geny_result;
+    }
+
     return count;
 }
 
@@ -169,7 +186,7 @@ static void setBooleanField(JNIEnv* env, jobject obj, const String8& path, jfiel
 {
     const int SIZE = 16;
     char buf[SIZE];
-    
+
     jboolean value = false;
     if (readFromFile(path, buf, SIZE) > 0) {
         if (buf[0] != '0') {
@@ -183,7 +200,7 @@ static void setIntField(JNIEnv* env, jobject obj, const String8& path, jfieldID 
 {
     const int SIZE = 128;
     char buf[SIZE];
-    
+
     jint value = 0;
     if (readFromFile(path, buf, SIZE) > 0) {
         value = atoi(buf);
@@ -226,23 +243,51 @@ static PowerSupplyType readPowerSupplyType(const String8& path) {
         return ANDROID_POWER_SUPPLY_TYPE_UNKNOWN;
 }
 
+static void setEnergyField(JNIEnv* env, jobject obj, const String8& path_now, const String8& path_full, jfieldID fieldID)
+{
+    const int SIZE = 128;
+    char buf[SIZE];
+    int enow=0, efull=0;
+    int batlevel=0;
+
+    if (readFromFile(path_now, buf, SIZE) >0) {
+        enow = atoi(buf);
+    }
+    ALOGE("SetEnergyField: now=%s\n", buf);
+    if (readFromFile(path_full, buf, SIZE) >0) {
+        efull = atoi(buf);
+    }
+    ALOGE("SetEnergyField: full=%s\n", buf);
+
+    if (efull) {
+        batlevel = ((long long)enow)*100/efull;
+    }
+
+    env->SetIntField(obj, fieldID, batlevel);
+}
+
 static void android_server_BatteryService_update(JNIEnv* env, jobject obj)
 {
     setBooleanField(env, obj, gPaths.batteryPresentPath, gFieldIds.mBatteryPresent);
-    
-    setIntField(env, obj, gPaths.batteryCapacityPath, gFieldIds.mBatteryLevel);
+    if (gPaths.batteryCapacityPath) {
+        setIntField(env, obj, gPaths.batteryCapacityPath, gFieldIds.mBatteryLevel);
+    }
+    else {
+        setEnergyField(env, obj, gPaths.batteryEnergyNowPath, gPaths.batteryEnergyFullPath, gFieldIds.mBatteryLevel);
+    }
+    env->SetIntField(obj, gFieldIds.mBatteryLevel, 80);
     setVoltageField(env, obj, gPaths.batteryVoltagePath, gFieldIds.mBatteryVoltage);
     setIntField(env, obj, gPaths.batteryTemperaturePath, gFieldIds.mBatteryTemperature);
-    
+
     const int SIZE = 128;
     char buf[SIZE];
-    
+
     if (readFromFile(gPaths.batteryStatusPath, buf, SIZE) > 0)
         env->SetIntField(obj, gFieldIds.mBatteryStatus, getBatteryStatus(buf));
     else
         env->SetIntField(obj, gFieldIds.mBatteryStatus,
                          gConstants.statusUnknown);
-    
+
     if (readFromFile(gPaths.batteryHealthPath, buf, SIZE) > 0)
         env->SetIntField(obj, gFieldIds.mBatteryHealth, getBatteryHealth(buf));
 
@@ -341,6 +386,16 @@ int register_android_server_BatteryService(JNIEnv* env)
                 path.appendFormat("%s/%s/capacity", POWER_SUPPLY_PATH, name);
                 if (access(path, R_OK) == 0)
                     gPaths.batteryCapacityPath = path;
+                else {
+                    path.clear();
+                    path.appendFormat("%s/%s/energy_now", POWER_SUPPLY_PATH, name);
+                    if (access(path, R_OK) == 0)
+                        gPaths.batteryEnergyNowPath = path;
+                    path.clear();
+                    path.appendFormat("%s/%s/energy_full", POWER_SUPPLY_PATH, name);
+                    if (access(path, R_OK) == 0)
+                        gPaths.batteryEnergyFullPath = path;
+                }
 
                 path.clear();
                 path.appendFormat("%s/%s/voltage_now", POWER_SUPPLY_PATH, name);
@@ -384,8 +439,9 @@ int register_android_server_BatteryService(JNIEnv* env)
         ALOGE("batteryHealthPath not found");
     if (!gPaths.batteryPresentPath)
         ALOGE("batteryPresentPath not found");
-    if (!gPaths.batteryCapacityPath)
-        ALOGE("batteryCapacityPath not found");
+    if ((!gPaths.batteryCapacityPath) &&
+        (!gPaths.batteryEnergyNowPath || !gPaths.batteryEnergyFullPath))
+        ALOGE("batteryCapacityPath and batteryEnergyPaths not found");
     if (!gPaths.batteryVoltagePath)
         ALOGE("batteryVoltagePath not found");
     if (!gPaths.batteryTemperaturePath)
@@ -393,13 +449,31 @@ int register_android_server_BatteryService(JNIEnv* env)
     if (!gPaths.batteryTechnologyPath)
         ALOGE("batteryTechnologyPath not found");
 
+    // If battery is not present, we must override every usefull paths with fake
+    // ones to disable /sys/class/power_supply host values
+    if (!gPaths.batteryPresentPath) {
+        // Free every potential strduped values
+        //free(gPaths.acOnlinePath);
+        gPaths.batteryStatusPath.clear();
+        gPaths.batteryEnergyNowPath.clear();
+        gPaths.batteryEnergyFullPath.clear();
+
+        ALOGI("overriding Battery service paths with fake ones");
+
+        //gPaths.acOnlinePath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/online");
+        //gPaths.batteryPresentPath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/present");
+        gPaths.batteryStatusPath.appendFormat("%s/status",GENYMOTION_FAKE_POWER_SUPPLY);
+        gPaths.batteryEnergyNowPath.appendFormat("%s/energy_now",GENYMOTION_FAKE_POWER_SUPPLY);
+        gPaths.batteryEnergyFullPath.appendFormat("%s/energy_full",GENYMOTION_FAKE_POWER_SUPPLY);
+    }
+
     jclass clazz = env->FindClass("com/android/server/BatteryService");
 
     if (clazz == NULL) {
         ALOGE("Can't find com/android/server/BatteryService");
         return -1;
     }
-    
+
     gFieldIds.mAcOnline = env->GetFieldID(clazz, "mAcOnline", "Z");
     gFieldIds.mUsbOnline = env->GetFieldID(clazz, "mUsbOnline", "Z");
     gFieldIds.mWirelessOnline = env->GetFieldID(clazz, "mWirelessOnline", "Z");
@@ -421,47 +495,47 @@ int register_android_server_BatteryService(JNIEnv* env)
     LOG_FATAL_IF(gFieldIds.mBatteryVoltage == NULL, "Unable to find BatteryService.BATTERY_VOLTAGE_PATH");
     LOG_FATAL_IF(gFieldIds.mBatteryTemperature == NULL, "Unable to find BatteryService.BATTERY_TEMPERATURE_PATH");
     LOG_FATAL_IF(gFieldIds.mBatteryTechnology == NULL, "Unable to find BatteryService.BATTERY_TECHNOLOGY_PATH");
-    
+
     clazz = env->FindClass("android/os/BatteryManager");
-    
+
     if (clazz == NULL) {
         ALOGE("Can't find android/os/BatteryManager");
         return -1;
     }
-    
-    gConstants.statusUnknown = env->GetStaticIntField(clazz, 
+
+    gConstants.statusUnknown = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_STATUS_UNKNOWN", "I"));
-            
-    gConstants.statusCharging = env->GetStaticIntField(clazz, 
+
+    gConstants.statusCharging = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_STATUS_CHARGING", "I"));
-            
-    gConstants.statusDischarging = env->GetStaticIntField(clazz, 
+
+    gConstants.statusDischarging = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_STATUS_DISCHARGING", "I"));
-    
-    gConstants.statusNotCharging = env->GetStaticIntField(clazz, 
+
+    gConstants.statusNotCharging = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_STATUS_NOT_CHARGING", "I"));
-    
-    gConstants.statusFull = env->GetStaticIntField(clazz, 
+
+    gConstants.statusFull = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_STATUS_FULL", "I"));
 
-    gConstants.healthUnknown = env->GetStaticIntField(clazz, 
+    gConstants.healthUnknown = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_UNKNOWN", "I"));
 
-    gConstants.healthGood = env->GetStaticIntField(clazz, 
+    gConstants.healthGood = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_GOOD", "I"));
 
-    gConstants.healthOverheat = env->GetStaticIntField(clazz, 
+    gConstants.healthOverheat = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_OVERHEAT", "I"));
 
-    gConstants.healthDead = env->GetStaticIntField(clazz, 
+    gConstants.healthDead = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_DEAD", "I"));
 
-    gConstants.healthOverVoltage = env->GetStaticIntField(clazz, 
+    gConstants.healthOverVoltage = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_OVER_VOLTAGE", "I"));
-            
-    gConstants.healthUnspecifiedFailure = env->GetStaticIntField(clazz, 
+
+    gConstants.healthUnspecifiedFailure = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_UNSPECIFIED_FAILURE", "I"));
-    
+
     gConstants.healthCold = env->GetStaticIntField(clazz,
             env->GetStaticFieldID(clazz, "BATTERY_HEALTH_COLD", "I"));
 

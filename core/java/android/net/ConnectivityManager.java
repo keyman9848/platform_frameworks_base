@@ -27,6 +27,9 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
 import android.provider.Settings;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.DetailedState;
+import android.util.Log;
 
 import java.net.InetAddress;
 

@@ -129,6 +129,7 @@ void Caches::initConstraints() {
         ALOGW("At least %d texture units are required!", REQUIRED_TEXTURE_UNITS_COUNT);
     }
 
+    ALOGE("Getting MAX_TEXTURE_SIZE from Caches::initConstraints()");
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
 }
 

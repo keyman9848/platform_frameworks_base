@@ -82,7 +82,7 @@ public final class BatteryService extends Binder {
     private static final boolean DEBUG = false;
 
     private static final int BATTERY_SCALE = 100;    // battery capacity is a percentage
-
+    private static final int BATTERY_REFRESH = 5;  // battery refresh periode in seconds
     // Used locally for determining when to make a last ditch effort to log
     // discharge stats before the device dies.
     private int mCriticalBatteryLevel;
@@ -161,6 +161,7 @@ public final class BatteryService extends Binder {
                 com.android.internal.R.integer.config_shutdownBatteryTemperature);
 
         mPowerSupplyObserver.startObserving("SUBSYSTEM=power_supply");
+	batteryinfo_poll_thread.start();
 
         // watch for invalid charger messages if the invalid_charger switch exists
         if (new File("/sys/devices/virtual/switch/invalid_charger/state").exists()) {
@@ -246,6 +247,7 @@ public final class BatteryService extends Binder {
     }
 
     private void shutdownIfNoPowerLocked() {
+/*
         // shut down gracefully if our battery is critically low and we are not powered.
         // wait until the system has booted before attempting to display the shutdown dialog.
         if (mBatteryLevel == 0 && !isPoweredLocked(BatteryManager.BATTERY_PLUGGED_ANY)) {
@@ -261,6 +263,7 @@ public final class BatteryService extends Binder {
                 }
             });
         }
+*/
     }
 
     private void shutdownIfOverTempLocked() {
@@ -679,6 +682,22 @@ public final class BatteryService extends Binder {
                 }
             }
         }
+    };
+
+    private Thread batteryinfo_poll_thread = new Thread() {
+	@Override
+        public void run() {
+            try {
+              	while (true) {
+		    sleep(BATTERY_REFRESH * 1000);
+                    synchronized (mLock) {
+                        updateLocked();
+                    }
+		}
+	    } catch (InterruptedException e) {
+		e.printStackTrace();
+	    }
+	}	
     };
 
     private final class Led {

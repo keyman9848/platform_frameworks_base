@@ -1131,6 +1131,11 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
             && test_bit(ABS_X, device->absBitmask)
             && test_bit(ABS_Y, device->absBitmask)) {
         device->classes |= INPUT_DEVICE_CLASS_TOUCH;
+    // Is this an "absolute mouse" (Virtualbox mouse integration)
+    } else if (test_bit(BTN_MOUSE, device->keyBitmask)
+            && test_bit(ABS_X, device->absBitmask)
+            && test_bit(ABS_Y, device->absBitmask)) {
+        device->classes |= INPUT_DEVICE_CLASS_TOUCH;
     }
 
     // See if this device is a joystick.
@@ -1214,6 +1219,29 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         unsigned int repeatRate[] = {0,0};
         if (ioctl(fd, EVIOCSREP, repeatRate)) {
             ALOGW("Unable to disable kernel key repeat for %s: %s", devicePath, strerror(errno));
+        }
+    }
+
+    // Buildroid
+    if (device->classes & (INPUT_DEVICE_CLASS_KEYBOARD | INPUT_DEVICE_CLASS_ALPHAKEY)) {
+        char ignkeyb_property[PROPERTY_VALUE_MAX];
+
+        if (property_get("androVM.keyboard_disable", ignkeyb_property, NULL) > 0) {
+            int ignkeyb = atoi(ignkeyb_property);
+
+            ALOGI("keyboard disable is |%s] [%d]\n", ignkeyb_property, ignkeyb);
+            switch (ignkeyb) {
+             case 1:
+                ALOGI("ignoring event id %s because keyboard disabled by androVM configuration\n", devicePath);
+                close(fd);
+                return -1;
+                break;
+             case 2:
+                ALOGI("removing ALPHAKEY class from %s\n", devicePath);
+                device->classes &= 0xFFFF & ~INPUT_DEVICE_CLASS_ALPHAKEY;
+                ALOGI("new device class: %d\n", device->classes);
+                break;
+            }
         }
     }
 
