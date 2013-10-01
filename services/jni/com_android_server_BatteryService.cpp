@@ -161,7 +161,7 @@ static int readFromFile(const String8& path, char* buf, size_t size)
         ALOGE("Could not open '%s'", path.string());
         return -1;
     }
-    
+
     ssize_t count = read(fd, buf, size);
     if (count > 0) {
         while (count > 0 && buf[count-1] == '\n')
@@ -253,11 +253,10 @@ static void setEnergyField(JNIEnv* env, jobject obj, const String8& path_now, co
     if (readFromFile(path_now, buf, SIZE) >0) {
         enow = atoi(buf);
     }
-    ALOGE("SetEnergyField: now=%s\n", buf);
+
     if (readFromFile(path_full, buf, SIZE) >0) {
         efull = atoi(buf);
     }
-    ALOGE("SetEnergyField: full=%s\n", buf);
 
     if (efull) {
         batlevel = ((long long)enow)*100/efull;
@@ -269,13 +268,12 @@ static void setEnergyField(JNIEnv* env, jobject obj, const String8& path_now, co
 static void android_server_BatteryService_update(JNIEnv* env, jobject obj)
 {
     setBooleanField(env, obj, gPaths.batteryPresentPath, gFieldIds.mBatteryPresent);
-    if (gPaths.batteryCapacityPath) {
+    if (!gPaths.batteryCapacityPath.isEmpty()) {
         setIntField(env, obj, gPaths.batteryCapacityPath, gFieldIds.mBatteryLevel);
     }
     else {
         setEnergyField(env, obj, gPaths.batteryEnergyNowPath, gPaths.batteryEnergyFullPath, gFieldIds.mBatteryLevel);
     }
-    env->SetIntField(obj, gFieldIds.mBatteryLevel, 80);
     setVoltageField(env, obj, gPaths.batteryVoltagePath, gFieldIds.mBatteryVoltage);
     setIntField(env, obj, gPaths.batteryTemperaturePath, gFieldIds.mBatteryTemperature);
 
@@ -453,15 +451,12 @@ int register_android_server_BatteryService(JNIEnv* env)
     // ones to disable /sys/class/power_supply host values
     if (!gPaths.batteryPresentPath) {
         // Free every potential strduped values
-        //free(gPaths.acOnlinePath);
         gPaths.batteryStatusPath.clear();
         gPaths.batteryEnergyNowPath.clear();
         gPaths.batteryEnergyFullPath.clear();
 
         ALOGI("overriding Battery service paths with fake ones");
 
-        //gPaths.acOnlinePath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/online");
-        //gPaths.batteryPresentPath = strdup(GENYMOTION_FAKE_POWER_SUPPLY"/present");
         gPaths.batteryStatusPath.appendFormat("%s/status",GENYMOTION_FAKE_POWER_SUPPLY);
         gPaths.batteryEnergyNowPath.appendFormat("%s/energy_now",GENYMOTION_FAKE_POWER_SUPPLY);
         gPaths.batteryEnergyFullPath.appendFormat("%s/energy_full",GENYMOTION_FAKE_POWER_SUPPLY);
