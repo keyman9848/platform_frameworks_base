@@ -805,7 +805,7 @@ char* AndroidRuntime::toSlashClassName(const char* className)
  */
 void AndroidRuntime::start(const char* className, const char* options)
 {
-    ALOGE("\n>>>>>> AndroidRuntime START %s <<<<<<\n",
+    ALOGD("\n>>>>>> AndroidRuntime START %s <<<<<<\n",
             className != NULL ? className : "(unknown)");
 
     blockSigpipe();
@@ -874,7 +874,6 @@ void AndroidRuntime::start(const char* className, const char* options)
      * not return until the VM exits.
      */
     char* slashClassName = toSlashClassName(className);
-    ALOGE("will FindClass %s", slashClassName);
     jclass startClass = env->FindClass(slashClassName);
     if (startClass == NULL) {
         ALOGE("JavaVM unable to locate class '%s'\n", slashClassName);
