@@ -50,7 +50,7 @@ public class PackageHelper {
     public static final int RECOMMEND_MEDIA_UNAVAILABLE = -5;
     public static final int RECOMMEND_FAILED_INVALID_URI = -6;
 
-    private static final boolean localLOGV = true;
+    private static final boolean localLOGV = false;
     private static final String TAG = "PackageHelper";
     // App installation location settings values
     public static final int APP_INSTALL_AUTO = 0;

@@ -15,7 +15,7 @@
  */
 
 #define LOG_TAG "NativeLibraryHelper"
-#define LOG_NDEBUG 1
+//#define LOG_NDEBUG 0
 
 #include <android_runtime/AndroidRuntime.h>
 
@@ -54,8 +54,14 @@ namespace android {
 // These match PackageManager.java install codes
 typedef enum {
     INSTALL_SUCCEEDED = 1,
+#ifdef WITH_HOUDINI
+    INSTALL_ABI2_SUCCEEDED = 2,
+#endif
     INSTALL_FAILED_INVALID_APK = -2,
     INSTALL_FAILED_INSUFFICIENT_STORAGE = -4,
+#ifdef WITH_HOUDINI
+    INSTALL_FAILED_CPU_ABI_INCOMPATIBLE = -16,
+#endif
     INSTALL_FAILED_CONTAINER_ERROR = -18,
     INSTALL_FAILED_INTERNAL_ERROR = -110,
 } install_status_t;
@@ -101,7 +107,7 @@ isFileDifferent(const char* filePath, size_t fileSize, time_t modifiedTime,
 {
     if (lstat64(filePath, st) < 0) {
         // File is not found or cannot be read.
-        ALOGE("Couldn't stat %s, copying: %s\n", filePath, strerror(errno));
+        ALOGV("Couldn't stat %s, copying: %s\n", filePath, strerror(errno));
         return true;
     }
 
@@ -115,13 +121,13 @@ isFileDifferent(const char* filePath, size_t fileSize, time_t modifiedTime,
 
     // For some reason, bionic doesn't define st_mtime as time_t
     if (time_t(st->st_mtime) != modifiedTime) {
-        ALOGE("mod time doesn't match: %ld vs. %ld\n", st->st_mtime, modifiedTime);
+        ALOGV("mod time doesn't match: %ld vs. %ld\n", st->st_mtime, modifiedTime);
         return true;
     }
 
     int fd = TEMP_FAILURE_RETRY(open(filePath, O_RDONLY));
     if (fd < 0) {
-        ALOGE("Couldn't open file %s: %s", filePath, strerror(errno));
+        ALOGV("Couldn't open file %s: %s", filePath, strerror(errno));
         return true;
     }
 
@@ -133,7 +139,7 @@ isFileDifferent(const char* filePath, size_t fileSize, time_t modifiedTime,
     }
     close(fd);
 
-    ALOGE("%s: crc = %lx, zipCrc = %lx\n", filePath, crc, zipCrc);
+    ALOGV("%s: crc = %lx, zipCrc = %lx\n", filePath, crc, zipCrc);
 
     if (crc != zipCrc) {
         return true;
@@ -156,6 +162,14 @@ sumFiles(JNIEnv* env, void* arg, ZipFileRO* zipFile, ZipEntryRO zipEntry, const 
 
     return INSTALL_SUCCEEDED;
 }
+
+#ifdef WITH_HOUDINI
+static install_status_t
+listFiles(JNIEnv* env, void* arg, ZipFileRO* zipFile, ZipEntryRO zipEntry, const char* fileName)
+{
+    return INSTALL_SUCCEEDED;
+}
+#endif
 
 /*
  * Copy the native library if needed.
@@ -261,18 +275,17 @@ copyFileIfChanged(JNIEnv *env, void* arg, ZipFileRO* zipFile, ZipEntryRO zipEntr
         return INSTALL_FAILED_CONTAINER_ERROR;
     }
 
-    ALOGE("Successfully moved %s to %s\n", localTmpFileName, localFileName);
+    ALOGV("Successfully moved %s to %s\n", localTmpFileName, localFileName);
 
     return INSTALL_SUCCEEDED;
 }
 
 static install_status_t
-iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, jstring javaCpuAbi2, jstring javaCpuAbi3,
+iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, jstring javaCpuAbi2,
         iterFunc callFunc, void* callArg) {
     ScopedUtfChars filePath(env, javaFilePath);
     ScopedUtfChars cpuAbi(env, javaCpuAbi);
     ScopedUtfChars cpuAbi2(env, javaCpuAbi2);
-    ScopedUtfChars cpuAbi3(env, javaCpuAbi3);
 
     ZipFileRO zipFile;
 
@@ -285,7 +298,10 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
 
     char fileName[PATH_MAX];
     bool hasPrimaryAbi = false;
-    bool hasSecondaryAbi = false;
+#ifdef WITH_HOUDINI
+    bool useSecondaryAbi = false;
+    bool noMatchAbi = false;
+#endif
 
     for (int i = 0; i < N; i++) {
         const ZipEntryRO entry = zipFile.findEntryByIndex(i);
@@ -317,11 +333,11 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
         const char* cpuAbiOffset = fileName + APK_LIB_LEN;
         const size_t cpuAbiRegionSize = lastSlash - cpuAbiOffset;
 
-        ALOGE("Comparing ABIs %s and %s and %s versus %s\n", cpuAbi.c_str(), cpuAbi2.c_str(), cpuAbi3.c_str(), cpuAbiOffset);
+        ALOGV("Comparing ABIs %s and %s versus %s\n", cpuAbi.c_str(), cpuAbi2.c_str(), cpuAbiOffset);
         if (cpuAbi.size() == cpuAbiRegionSize
                 && *(cpuAbiOffset + cpuAbi.size()) == '/'
                 && !strncmp(cpuAbiOffset, cpuAbi.c_str(), cpuAbiRegionSize)) {
-            ALOGE("Using primary ABI %s\n", cpuAbi.c_str());
+            ALOGV("Using primary ABI %s\n", cpuAbi.c_str());
             hasPrimaryAbi = true;
         } else if (cpuAbi2.size() == cpuAbiRegionSize
                 && *(cpuAbiOffset + cpuAbi2.size()) == '/'
@@ -332,30 +348,19 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
              * only use the primary ABI.
              */
             if (hasPrimaryAbi) {
-                ALOGE("Already saw primary ABI, skipping secondary ABI %s\n", cpuAbi2.c_str());
+                ALOGV("Already saw primary ABI, skipping secondary ABI %s\n", cpuAbi2.c_str());
                 continue;
             } else {
-                ALOGE("Using secondary ABI %s\n", cpuAbi2.c_str());
-            }
-        } else if (cpuAbi3.size() == cpuAbiRegionSize
-                && *(cpuAbiOffset + cpuAbi3.size()) == '/'
-                && !strncmp(cpuAbiOffset, cpuAbi3.c_str(), cpuAbiRegionSize)) {
-
-            /*
-             * If this library matches the primary and secondary ABIs as well
-             * as the third, only use the primary or secondary ABI.
-             */
-            if (hasPrimaryAbi) {
-                ALOGE("Already saw primary ABI, skipping third ABI %s\n", cpuAbi2.c_str());
-                continue;
-            } else if (hasSecondaryAbi) {
-                ALOGE("Already saw secondary ABI, skipping third ABI %s\n", cpuAbi2.c_str());
-                continue;
-            } else {
-                ALOGE("Using third ABI %s\n", cpuAbi3.c_str());
+#ifdef WITH_HOUDINI
+                useSecondaryAbi = true;
+#endif
+                ALOGV("Using secondary ABI %s\n", cpuAbi2.c_str());
             }
         } else {
-            ALOGE("abi didn't match anything: %s (end at %zd)\n", cpuAbiOffset, cpuAbiRegionSize);
+#ifdef WITH_HOUDINI
+            noMatchAbi = true;
+#endif
+            ALOGV("abi didn't match anything: %s (end at %zd)\n", cpuAbiOffset, cpuAbiRegionSize);
             continue;
         }
 
@@ -368,41 +373,63 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
             install_status_t ret = callFunc(env, callArg, &zipFile, entry, lastSlash + 1);
 
             if (ret != INSTALL_SUCCEEDED) {
-                ALOGE("Failure for entry %s", lastSlash + 1);
+                ALOGV("Failure for entry %s", lastSlash + 1);
                 return ret;
             }
         }
     }
+
+#ifdef WITH_HOUDINI
+    if (!hasPrimaryAbi && !useSecondaryAbi && noMatchAbi)
+        return INSTALL_FAILED_CPU_ABI_INCOMPATIBLE;
+
+    if (!hasPrimaryAbi && useSecondaryAbi)
+        return INSTALL_ABI2_SUCCEEDED;
+#endif
 
     return INSTALL_SUCCEEDED;
 }
 
 static jint
 com_android_internal_content_NativeLibraryHelper_copyNativeBinaries(JNIEnv *env, jclass clazz,
-        jstring javaFilePath, jstring javaNativeLibPath, jstring javaCpuAbi, jstring javaCpuAbi2, jstring javaCpuAbi3)
+        jstring javaFilePath, jstring javaNativeLibPath, jstring javaCpuAbi, jstring javaCpuAbi2)
 {
-    return (jint) iterateOverNativeFiles(env, javaFilePath, javaCpuAbi, javaCpuAbi2, javaCpuAbi3,
+    return (jint) iterateOverNativeFiles(env, javaFilePath, javaCpuAbi, javaCpuAbi2,
             copyFileIfChanged, &javaNativeLibPath);
 }
 
 static jlong
 com_android_internal_content_NativeLibraryHelper_sumNativeBinaries(JNIEnv *env, jclass clazz,
-        jstring javaFilePath, jstring javaCpuAbi, jstring javaCpuAbi2, jstring javaCpuAbi3)
+        jstring javaFilePath, jstring javaCpuAbi, jstring javaCpuAbi2)
 {
     size_t totalSize = 0;
 
-    iterateOverNativeFiles(env, javaFilePath, javaCpuAbi, javaCpuAbi2, javaCpuAbi3, sumFiles, &totalSize);
+    iterateOverNativeFiles(env, javaFilePath, javaCpuAbi, javaCpuAbi2, sumFiles, &totalSize);
 
     return totalSize;
 }
 
+#ifdef WITH_HOUDINI
+static jint
+com_android_internal_content_NativeLibraryHelper_listNativeBinaries(JNIEnv *env, jclass clazz,
+        jstring javaFilePath, jstring javaCpuAbi, jstring javaCpuAbi2)
+{
+    return (jint) iterateOverNativeFiles(env, javaFilePath, javaCpuAbi, javaCpuAbi2, listFiles, NULL);
+}
+#endif
+
 static JNINativeMethod gMethods[] = {
     {"nativeCopyNativeBinaries",
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I",
             (void *)com_android_internal_content_NativeLibraryHelper_copyNativeBinaries},
     {"nativeSumNativeBinaries",
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)J",
             (void *)com_android_internal_content_NativeLibraryHelper_sumNativeBinaries},
+#ifdef WITH_HOUDINI
+    {"nativeListNativeBinaries",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I",
+            (void *)com_android_internal_content_NativeLibraryHelper_listNativeBinaries},
+#endif
 };
 
 
