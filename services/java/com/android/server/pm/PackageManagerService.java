@@ -3967,6 +3967,10 @@ public class PackageManagerService extends IPackageManager.Stub {
             pkgSetting.uidError = uidError;
         }
 
+        int needUpdate = 0;
+        Integer pkgUidInt = new Integer(pkg.applicationInfo.uid);
+        String abi2 = SystemProperties.get("ro.product.cpu.abi2");
+
         String path = scanFile.getPath();
         /* Note: We don't want to unpack the native binaries for
          *        system applications, unless they have been updated
@@ -4018,8 +4022,39 @@ public class PackageManagerService extends IPackageManager.Stub {
                      * nativeLibraryPath points to our data directory, unpack
                      * the libraries if necessary.
                      */
-                    NativeLibraryHelper.copyNativeBinariesIfNeededLI(scanFile, nativeLibraryDir);
+                    if (abi2.length() == 0) {
+                        NativeLibraryHelper.copyNativeBinariesIfNeededLI(scanFile, nativeLibraryDir);
+                    } else {
+                        // abi2 is set, houdini is enabled
+                        int result = NativeLibraryHelper.copyNativeBinariesIfNeededLI(scanFile, nativeLibraryDir);
+                        if (result != PackageManager.INSTALL_SUCCEEDED && result != PackageManager.INSTALL_ABI2_SUCCEEDED) {
+                            mLastScanError = result;
+                            mInstaller.remove(pkgName,0);
+                            return null;
+                        }
+                        if (result == PackageManager.INSTALL_ABI2_SUCCEEDED) {
+                            ICheckExt check = new CheckExt();
+                            if(check.doCheck(pkgName, new String("filter"))) {
+                                mLastScanError = PackageManager.INSTALL_FAILED_INVALID_APK;
+                                mInstaller.remove(pkgName,0);
+                                return null;
+                            }
+                            Slog.i(TAG, "Package installed with second ABI Library: " + pkgUidInt + pkg.applicationInfo.processName);
+                            mPackagesMatchABI2.put(pkgUidInt, pkg.applicationInfo.processName);
+                            needUpdate = 1;
+                        }
+                    }
                 } else {
+                    if (abi2.length() != 0) {
+                        // abi2 is set, houdini is enabled
+                        int result = NativeLibraryHelper.listNativeBinariesLI(scanFile);
+
+                        if (result == PackageManager.INSTALL_ABI2_SUCCEEDED) {
+                            Slog.i(TAG, "Package installed with second ABI Library in sdcard: " + pkgUidInt + pkg.applicationInfo.processName);
+                            mPackagesMatchABI2.put(pkgUidInt, pkg.applicationInfo.processName);
+                            needUpdate = 1;
+                        }
+                    }
                     Slog.i(TAG, "Linking native library dir for " + path);
                     mInstaller.linkNativeLibraryDirectory(dataPathString,
                             pkg.applicationInfo.nativeLibraryDir);
@@ -4035,6 +4070,19 @@ public class PackageManagerService extends IPackageManager.Stub {
                     == DEX_OPT_FAILED) {
                 mLastScanError = PackageManager.INSTALL_FAILED_DEXOPT;
                 return null;
+            }
+        }
+        if (abi2.length() != 0) {
+            // abi2 is set, houdini is enabled
+            if (needUpdate != 1) {
+                if(mPackagesMatchABI2.containsKey(pkgUidInt)) {
+                    Slog.i(TAG, "Upgrade package from second ABI to primary ABI");
+                        mPackagesMatchABI2.remove(pkgUidInt);
+                    needUpdate = 1;
+                }
+            }
+            if (needUpdate == 1) {
+                writeAppwithABI2();
             }
         }
 
@@ -4362,6 +4410,13 @@ public class PackageManagerService extends IPackageManager.Stub {
             mPackages.remove(pkg.applicationInfo.packageName);
             if (pkg.mPath != null) {
                 mAppDirs.remove(pkg.mPath);
+            }
+
+            String abi2 = SystemProperties.get("ro.product.cpu.abi2");
+            if (abi2.length() != 0 && mPackagesMatchABI2.containsKey(new Integer(pkg.applicationInfo.uid))) {
+                Slog.i(TAG, "Uninstall package with second ABI Library");
+                mPackagesMatchABI2.remove(new Integer(pkg.applicationInfo.uid));
+                writeAppwithABI2();
             }
 
             int N = pkg.providers.size();

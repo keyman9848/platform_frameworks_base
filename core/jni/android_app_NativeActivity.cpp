@@ -37,9 +37,18 @@
 #include "android_os_MessageQueue.h"
 #include "android_view_InputChannel.h"
 #include "android_view_KeyEvent.h"
+#include <cutils/properties.h>
 
 #define LOG_TRACE(...)
 //#define LOG_TRACE(...) ALOG(LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+
+#ifdef WITH_HOUDINI
+namespace houdini {
+void* hookDlopen(const char* filename, int flag, bool* useHoudini);
+void* hookDlsym(bool useHoudini, void* handle, const char* symbol);
+void  hookCreateActivity(bool useHoudini, void* createActivityFunc, void* activity, void*houdiniActivity, void* savedState, size_t savedStateSize);
+}
+#endif
 
 namespace android
 {
@@ -633,11 +642,12 @@ loadNativeCode_native(JNIEnv* env, jobject clazz, jstring path, jstring funcName
 #else
     void* handle = dlopen(pathStr, RTLD_LAZY);
 #endif
-    
+
     env->ReleaseStringUTFChars(path, pathStr);
     
     if (handle != NULL) {
         const char* funcStr = env->GetStringUTFChars(funcName, NULL);
+        ALOGD("func name = %s.\n",funcStr);
 #ifdef WITH_HOUDINI
         code = new NativeCode(handle, (ANativeActivity_createFunc*)
                 houdini::hookDlsym(useHoudini, handle, funcStr));
@@ -645,7 +655,6 @@ loadNativeCode_native(JNIEnv* env, jobject clazz, jstring path, jstring funcName
         code = new NativeCode(handle, (ANativeActivity_createFunc*)
                 dlsym(handle, funcStr));
 #endif
-        env->ReleaseStringUTFChars(funcName, funcStr);
         
         if (code->createActivityFunc == NULL) {
             ALOGW("ANativeActivity_onCreate not found");
@@ -727,6 +736,8 @@ loadNativeCode_native(JNIEnv* env, jobject clazz, jstring path, jstring funcName
 #else
         code->createActivityFunc(code, rawSavedState, rawSavedSize);
 #endif
+
+        env->ReleaseStringUTFChars(funcName, funcStr);
 
         if (rawSavedState != NULL) {
             env->ReleaseByteArrayElements(savedState, rawSavedState, 0);

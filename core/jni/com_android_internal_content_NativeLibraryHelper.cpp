@@ -383,7 +383,7 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
     if (!hasPrimaryAbi && !useSecondaryAbi && noMatchAbi)
         return INSTALL_FAILED_CPU_ABI_INCOMPATIBLE;
 
-    if (!hasPrimaryAbi && useSecondaryAbi)
+    if (useSecondaryAbi)
         return INSTALL_ABI2_SUCCEEDED;
 #endif
 
