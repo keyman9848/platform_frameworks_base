@@ -17,6 +17,11 @@ endif
 
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
+ifeq ($(INTEL_HOUDINI), true)
+    LOCAL_CFLAGS += -DWITH_HOUDINI
+    LOCAL_STATIC_LIBRARIES += libhoudini_hook
+endif
+
 LOCAL_SRC_FILES:= \
 	AndroidRuntime.cpp \
 	Time.cpp \

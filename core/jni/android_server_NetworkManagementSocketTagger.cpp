@@ -40,10 +40,13 @@ static jint QTagUid_tagSocketFd(JNIEnv* env, jclass,
     return (jint)-1;
   }
 
+#if 0
   int res = qtaguid_tagSocket(userFd, tagNum, uid);
   if (res < 0) {
     return (jint)-errno;
   }
+#endif
+  int res=0;
   return (jint)res;
 }
 

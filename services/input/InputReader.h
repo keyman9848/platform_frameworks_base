@@ -704,6 +704,8 @@ private:
     bool mBtnToolTripleTap;
     bool mBtnToolQuadTap;
 
+    bool mIsAbsoluteMouse;
+
     void clearButtons();
 };
 
@@ -1317,6 +1319,8 @@ protected:
     BitSet32 mLastStylusIdBits;
     BitSet32 mCurrentMouseIdBits; // mouse or lens
     BitSet32 mLastMouseIdBits;
+    BitSet32 mCurrentAbsoluteMouseIdBits; // absolute mouse
+    BitSet32 mLastAbsoluteMouseIdBits;
 
     // True if we sent a HOVER_ENTER event.
     bool mSentHoverEnter;
@@ -1462,6 +1466,7 @@ private:
         POINTER_USAGE_GESTURES,
         POINTER_USAGE_STYLUS,
         POINTER_USAGE_MOUSE,
+        POINTER_USAGE_ABSOLUTE_MOUSE,
     };
     PointerUsage mPointerUsage;
 
@@ -1654,6 +1659,7 @@ private:
     void abortPointerStylus(nsecs_t when, uint32_t policyFlags);
 
     void dispatchPointerMouse(nsecs_t when, uint32_t policyFlags);
+    void dispatchPointerAbsoluteMouse(nsecs_t when, uint32_t policyFlags);
     void abortPointerMouse(nsecs_t when, uint32_t policyFlags);
 
     void dispatchPointerSimple(nsecs_t when, uint32_t policyFlags,

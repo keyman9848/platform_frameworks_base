@@ -158,10 +158,10 @@ PathCache::PathCache():
         mSize(0), mMaxSize(MB(DEFAULT_PATH_CACHE_SIZE)) {
     char property[PROPERTY_VALUE_MAX];
     if (property_get(PROPERTY_PATH_CACHE_SIZE, property, NULL) > 0) {
-        INIT_LOGD("  Setting %s cache size to %sMB", name, property);
+        INIT_LOGD("  Setting %s cache size to %sMB", "UNKNOWN", property);
         setMaxSize(MB(atof(property)));
     } else {
-        INIT_LOGD("  Using default %s cache size of %.2fMB", name, DEFAULT_PATH_CACHE_SIZE);
+        INIT_LOGD("  Using default %s cache size of %.2fMB", "UNKNOWN", DEFAULT_PATH_CACHE_SIZE);
     }
     init();
 }

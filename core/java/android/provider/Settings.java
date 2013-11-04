@@ -1080,6 +1080,7 @@ public final class Settings {
             MOVED_TO_GLOBAL.add(Settings.Global.LOW_BATTERY_SOUND);
             MOVED_TO_GLOBAL.add(Settings.Global.POWER_SOUNDS_ENABLED);
             MOVED_TO_GLOBAL.add(Settings.Global.STAY_ON_WHILE_PLUGGED_IN);
+            MOVED_TO_GLOBAL.add(Settings.Global.STAY_ON_ALWAYS);
             MOVED_TO_GLOBAL.add(Settings.Global.WIFI_SLEEP_POLICY);
             MOVED_TO_GLOBAL.add(Settings.Global.MODE_RINGER);
             MOVED_TO_GLOBAL.add(Settings.Global.WINDOW_ANIMATION_SCALE);
@@ -1537,6 +1538,12 @@ public final class Settings {
          */
         @Deprecated
         public static final String STAY_ON_WHILE_PLUGGED_IN = Global.STAY_ON_WHILE_PLUGGED_IN;
+
+        /**
+         * STAY_ON_ALWAYS will always make the screen on
+         * @hide
+         */
+	public static final String STAY_ON_ALWAYS = Global.STAY_ON_ALWAYS;
 
         /**
          * What happens when the user presses the end call button if they're not
@@ -2427,6 +2434,7 @@ public final class Settings {
          */
         public static final String[] SETTINGS_TO_BACKUP = {
             STAY_ON_WHILE_PLUGGED_IN,   // moved to global
+            STAY_ON_ALWAYS,   // moved to global
             WIFI_USE_STATIC_IP,
             WIFI_STATIC_IP,
             WIFI_STATIC_GATEWAY,
@@ -4780,6 +4788,11 @@ public final class Settings {
          * @hide
          */
         public static final String BUGREPORT_IN_POWER_MENU = "bugreport_in_power_menu";
+
+        /**
+         * Screen always on
+         */
+        public static final String STAY_ON_ALWAYS = "stay_on_always";
 
         /**
          * Whether ADB is enabled.
