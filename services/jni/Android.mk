@@ -14,7 +14,10 @@ LOCAL_SRC_FILES:= \
     onload.cpp
 
 LOCAL_C_INCLUDES += \
-	$(JNI_H_INCLUDE)
+	$(JNI_H_INCLUDE) \
+        device/androVM/common/system/genyd/lib \
+        bionic \
+        external/stlport/stlport
 
 LOCAL_SHARED_LIBRARIES := \
     libandroid_runtime \
@@ -25,7 +28,8 @@ LOCAL_SHARED_LIBRARIES := \
     libsystem_server \
 	libutils \
 	libui \
-    libsurfaceflinger_client
+    libsurfaceflinger_client \
+    libgenyd
 
 ifeq ($(TARGET_SIMULATOR),true)
 ifeq ($(TARGET_OS),linux)

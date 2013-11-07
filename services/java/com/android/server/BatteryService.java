@@ -74,6 +74,8 @@ class BatteryService extends Binder {
 
     static final int BATTERY_SCALE = 100;    // battery capacity is a percentage
 
+    static final int BATTERY_REFRESH = 5; // battery refresh period in seconds
+
     // Used locally for determining when to make a last ditch effort to log
     // discharge stats before the device dies.
     private static final int CRITICAL_BATTERY_LEVEL = 4;
@@ -130,6 +132,7 @@ class BatteryService extends Binder {
                 com.android.internal.R.integer.config_lowBatteryCloseWarningLevel);
 
         mUEventObserver.startObserving("SUBSYSTEM=power_supply");
+        batteryinfo_poll_thread.start();
 
         // set initial status
         update();
@@ -168,6 +171,20 @@ class BatteryService extends Binder {
         public void onUEvent(UEventObserver.UEvent event) {
             update();
         }
+    };
+
+    private Thread batteryinfo_poll_thread = new Thread() {
+       @Override
+       public void run() {
+           try {
+               while (true) {
+                   update();
+                   sleep(BATTERY_REFRESH * 1000);
+               }
+           } catch (InterruptedException e) {
+               e.printStackTrace();
+           }
+       }       
     };
 
     // returns battery level as a percentage
