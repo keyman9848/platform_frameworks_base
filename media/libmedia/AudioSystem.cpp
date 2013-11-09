@@ -384,6 +384,7 @@ void AudioSystem::AudioFlingerClient::binderDied(const wp<IBinder>& who) {
         gAudioErrorCallback(DEAD_OBJECT);
     }
     LOGW("AudioFlinger server died!");
+    exit(1); // Kill ourself so everything start up again
 }
 
 void AudioSystem::AudioFlingerClient::ioConfigChanged(int event, int ioHandle, void *param2) {

@@ -2513,6 +2513,23 @@ status_t GraphicPlane::setOrientation(int orientation)
         mHeight = int(w);
     }
 
+    LOGE("setOrientation with orientation=%d\n", orientation);
+
+    switch (orientation) {
+     case ISurfaceComposer::eOrientation90:
+        hw.setOrientation(1);
+       break;
+     case ISurfaceComposer::eOrientation180:
+        hw.setOrientation(2);
+        break;
+     case ISurfaceComposer::eOrientation270:
+       hw.setOrientation(3);
+       break;
+     default:
+        hw.setOrientation(0);
+        break;
+    }
+
     mOrientation = orientation;
     mGlobalTransform = mDisplayTransform * orientationTransform;
     return NO_ERROR;

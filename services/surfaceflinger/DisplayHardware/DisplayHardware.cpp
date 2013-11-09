@@ -293,6 +293,12 @@ void DisplayHardware::releaseScreen() const
     DisplayHardwareBase::releaseScreen();
 }
 
+void DisplayHardware::setOrientation(int orientation) const
+{
+    LOGE("setOrientation orientation=%d\n", orientation);
+    mNativeWindow->setOrientation(orientation);
+}
+
 void DisplayHardware::acquireScreen() const
 {
     DisplayHardwareBase::acquireScreen();

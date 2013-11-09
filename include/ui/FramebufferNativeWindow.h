@@ -55,6 +55,8 @@ public:
     bool isUpdateOnDemand() const { return mUpdateOnDemand; }
     status_t setUpdateRectangle(const Rect& updateRect);
     status_t compositionComplete();
+
+    void setOrientation(int);
     
     // for debugging only
     int getCurrentBufferIndex() const;
