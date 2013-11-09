@@ -164,6 +164,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     
     // Debugging: set this to have the system act like there is no hard keyboard.
     static final boolean KEYBOARD_ALWAYS_HIDDEN = false;
+    static final boolean LID_ALWAYS_OPEN = true;
     
     static public final String SYSTEM_DIALOG_REASON_KEY = "reason";
     static public final String SYSTEM_DIALOG_REASON_GLOBAL_ACTIONS = "globalactions";
@@ -783,7 +784,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     /** {@inheritDoc} */
     public void adjustConfigurationLw(Configuration config) {
         readLidState();
-        final boolean lidOpen = !KEYBOARD_ALWAYS_HIDDEN && mLidOpen;
+        boolean lidOpen = !KEYBOARD_ALWAYS_HIDDEN && mLidOpen;
+        if (LID_ALWAYS_OPEN)
+            lidOpen = true;
         mPowerManager.setKeyboardVisibility(lidOpen);
         config.hardKeyboardHidden = determineHiddenState(lidOpen,
                 mLidKeyboardAccessibility, Configuration.HARDKEYBOARDHIDDEN_YES,
