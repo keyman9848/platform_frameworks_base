@@ -832,6 +832,32 @@ int EventHub::openDevice(const char *deviceName) {
                 device->id, name, propName, keylayoutFilename);
     }
 
+    // Buildroid
+    if (device->classes & (INPUT_DEVICE_CLASS_KEYBOARD | INPUT_DEVICE_CLASS_ALPHAKEY)) {
+        char ignkeyb_property[PROPERTY_VALUE_MAX];
+
+        if (property_get("androVM.vkeyboard_mode", ignkeyb_property, NULL) > 0) {
+            int ignkeyb = atoi(ignkeyb_property);
+
+            LOGI("Virtual keyboard mode is |%s] [%d]\n", ignkeyb_property, ignkeyb);
+            switch (ignkeyb) {
+            case 0: // Hardware mode
+                LOGI("Vrtual keyboard is set to Hardware mode\n");
+                break;
+            case 1: // Software mode
+                LOGI("ignoring event id %s because keyboard disabled by androVM configuration\n", name );
+                close(fd);
+                return -1;
+                break;
+            case 2: // Software + Hotkeys mode
+                LOGI("removing ALPHAKEY class from %s\n", name);
+                device->classes &= 0xFFFF & ~INPUT_DEVICE_CLASS_ALPHAKEY;
+                LOGI("new device class: %d\n", device->classes);
+                break;
+            }
+        }
+    }
+
     // If the device isn't recognized as something we handle, don't monitor it.
     if (device->classes == 0) {
         LOGV("Dropping device %s %p, id = %d\n", deviceName, device, devid);
