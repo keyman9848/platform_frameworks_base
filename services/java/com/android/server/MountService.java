@@ -439,6 +439,10 @@ class MountService extends IMountService.Stub
                     notifyVolumeStateChange(null, "/sdcard", VolumeState.NoMedia, VolumeState.Mounted);
                     return;
                 }
+                if ("vbox86p".equals(SystemProperties.get("ro.product.device"))) {
+                    notifyVolumeStateChange(null, "/mnt/sdcard", VolumeState.NoMedia, VolumeState.Mounted);
+                    return;
+                }
                 new Thread() {
                     public void run() {
                         try {
