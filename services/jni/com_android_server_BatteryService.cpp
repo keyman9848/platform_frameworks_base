@@ -152,7 +152,7 @@ static int readFromFile(const String8& path, char* buf, size_t size)
         return -1;
 
     // If the file path is a fake one, override value completely
-    if (LibGenyd::useFakeValue(path, buf, size) > 0) {
+    if (LibGenyd::useFakeValue(path.string(), buf, size) > 0) {
        return strlen(buf);
     }
 
@@ -449,7 +449,7 @@ int register_android_server_BatteryService(JNIEnv* env)
 
     // If battery is not present, we must override every usefull paths with fake
     // ones to disable /sys/class/power_supply host values
-    if (!gPaths.batteryPresentPath) {
+    if (gPaths.batteryPresentPath.isEmpty()) {
         // Free every potential strduped values
         gPaths.batteryStatusPath.clear();
         gPaths.batteryEnergyNowPath.clear();
@@ -457,6 +457,7 @@ int register_android_server_BatteryService(JNIEnv* env)
 
         ALOGI("overriding Battery service paths with fake ones");
 
+        gPaths.batteryPresentPath.appendFormat("%s/present",GENYMOTION_FAKE_POWER_SUPPLY);
         gPaths.batteryStatusPath.appendFormat("%s/status",GENYMOTION_FAKE_POWER_SUPPLY);
         gPaths.batteryEnergyNowPath.appendFormat("%s/energy_now",GENYMOTION_FAKE_POWER_SUPPLY);
         gPaths.batteryEnergyFullPath.appendFormat("%s/energy_full",GENYMOTION_FAKE_POWER_SUPPLY);
