@@ -247,7 +247,6 @@ public final class BatteryService extends Binder {
     }
 
     private void shutdownIfNoPowerLocked() {
-/*
         // shut down gracefully if our battery is critically low and we are not powered.
         // wait until the system has booted before attempting to display the shutdown dialog.
         if (mBatteryLevel == 0 && !isPoweredLocked(BatteryManager.BATTERY_PLUGGED_ANY)) {
@@ -263,7 +262,6 @@ public final class BatteryService extends Binder {
                 }
             });
         }
-*/
     }
 
     private void shutdownIfOverTempLocked() {
@@ -697,7 +695,7 @@ public final class BatteryService extends Binder {
 	    } catch (InterruptedException e) {
 		e.printStackTrace();
 	    }
-	}	
+	}
     };
 
     private final class Led {
