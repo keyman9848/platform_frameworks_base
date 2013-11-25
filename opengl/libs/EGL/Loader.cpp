@@ -23,6 +23,7 @@
 #include <limits.h>
 
 #include <cutils/log.h>
+#include <cutils/properties.h>
 
 #include <EGL/egl.h>
 
@@ -44,6 +45,33 @@ namespace android {
  */
 
 ANDROID_SINGLETON_STATIC_INSTANCE( Loader )
+
+static int
+checkGlesEmulationStatus(void)
+{
+    /* We're going to check for the following kernel parameters:
+     *
+     *    qemu=1                      -> tells us that we run inside the emulator
+     *    android.qemu.gles=<number>  -> tells us the GLES GPU emulation status
+     *
+     * Note that we will return <number> if we find it. This let us support
+     * more additionnal emulation modes in the future.
+     */
+    char  prop[PROPERTY_VALUE_MAX];
+    int   result = -1;
+
+#if 0
+    /* First, check for qemu=1 */
+    property_get("ro.kernel.qemu",prop,"0");
+    if (atoi(prop) != 1)
+        return -1;
+#endif
+
+    /* We are in the emulator, get GPU status value */
+    //property_get("ro.kernel.qemu.gles",prop,"0");
+    property_get("androVM.gles",prop,"0");
+    return atoi(prop);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -94,6 +122,15 @@ Loader::Loader()
 {
     char line[256];
     char tag[256];
+
+    /* Special case for GLES emulation */
+    if (checkGlesEmulationStatus() == 0) {
+        LOGD("Emulator without GPU support detected. "
+              "Fallback to software renderer.");
+        gConfig.add( entry_t(0, 0, "android") );
+        return;
+    }
+
     FILE* cfg = fopen("/system/lib/egl/egl.cfg", "r");
     if (cfg == NULL) {
         // default config
