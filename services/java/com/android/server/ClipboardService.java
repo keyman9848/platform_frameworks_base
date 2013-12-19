@@ -18,17 +18,23 @@ package com.android.server;
 
 import android.text.IClipboard;
 import android.content.Context;
+import android.content.Intent;
+
 
 /**
  * Implementation of the clipboard for copy and paste.
  */
 public class ClipboardService extends IClipboard.Stub {
     private CharSequence mClipboard = "";
+    private Context context;
 
     /**
      * Instantiates the clipboard.
      */
-    public ClipboardService(Context context) { }
+    public ClipboardService(Context context) { 
+    	// Keep the context in order to broadcast an Intent
+    	this.context = context;
+    }
 
     // javadoc from interface
     public void setClipboardText(CharSequence text) {
@@ -38,6 +44,9 @@ public class ClipboardService extends IClipboard.Stub {
             }
     
             mClipboard = text;
+            
+            // Broadcast an Intent when clipboard content has changed
+        	context.sendBroadcast(new Intent("com.genymotion.clipboardproxy.CLIP_CHANGED"));
         }
     }
 
