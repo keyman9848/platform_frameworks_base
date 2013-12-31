@@ -244,6 +244,12 @@ public class TelephonyManager {
      *   {@link android.Manifest.permission#READ_PHONE_STATE READ_PHONE_STATE}
      */
     public String getDeviceId() {
+        String id = SystemProperties.get("genyd.device.id", null);
+        // If we have a set a DeviceID return it
+        if (! "".equals(id)) {
+            android.util.Log.w(TAG, "Overriding deviceId with " + id);
+            return id;
+        }
         try {
             return getSubscriberInfo().getDeviceId();
         } catch (RemoteException ex) {
