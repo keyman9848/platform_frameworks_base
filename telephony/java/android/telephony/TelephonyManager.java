@@ -244,10 +244,11 @@ public class TelephonyManager {
      *   {@link android.Manifest.permission#READ_PHONE_STATE READ_PHONE_STATE}
      */
     public String getDeviceId() {
-        String id = SystemProperties.get("genyd.device.id", null);
+        // Read DeviceID property or fallback to default value
+        String id = SystemProperties.get("genyd.device.id", "00000000000000");
         // If we have a set a DeviceID return it
         if (! "".equals(id)) {
-            android.util.Log.w(TAG, "Overriding deviceId with " + id);
+            android.util.Log.w(TAG, "Overriding DeviceId with " + id);
             return id;
         }
         try {
