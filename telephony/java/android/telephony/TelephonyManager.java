@@ -202,18 +202,13 @@ public class TelephonyManager {
     public String getDeviceId() {
         // Read DeviceID property or fallback to default value
         String id = SystemProperties.get("genyd.device.id", "00000000000000");
-        // If we have a set a DeviceID return it
-        if (! "".equals(id)) {
+        // If we have a set a DeviceID then we return it
+        if ("".equals(id)) {
+            android.util.Log.w(TAG, "Overriding DeviceId with an empty string");
+        } else {
             android.util.Log.w(TAG, "Overriding DeviceId with " + id);
-            return id;
         }
-        try {
-            return getSubscriberInfo().getDeviceId();
-        } catch (RemoteException ex) {
-            return null;
-        } catch (NullPointerException ex) {
-            return null;
-        }
+        return id;
     }
 
     /**
