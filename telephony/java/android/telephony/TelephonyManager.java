@@ -226,11 +226,11 @@ public class TelephonyManager {
         // Read DeviceID property or fallback to default value
         String id = SystemProperties.get("genyd.device.id", "00000000000000");
         // If we have a set a DeviceID then we return it
-        if ("".equals(id)) {
+        if ("[none]".equals(id)) {
             android.util.Log.w(TAG, "Overriding DeviceId with an empty string");
-        } else {
-            android.util.Log.w(TAG, "Overriding DeviceId with " + id);
+            return "";
         }
+        android.util.Log.w(TAG, "Overriding DeviceId with " + id);
         return id;
     }
 
