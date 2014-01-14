@@ -213,8 +213,9 @@ LOCAL_SRC_FILES += \
 	voip/java/android/net/sip/ISipSession.aidl \
 	voip/java/android/net/sip/ISipSessionListener.aidl \
 	voip/java/android/net/sip/ISipService.aidl
-#
 
+# Genymotion AIDL
+LOCAL_SRC_FILES += $(call find-other-aidl-files, genymotion)
 
 # FRAMEWORKS_BASE_JAVA_SRC_DIRS comes from build/core/pathmap.mk
 LOCAL_AIDL_INCLUDES += $(FRAMEWORKS_BASE_JAVA_SRC_DIRS)
