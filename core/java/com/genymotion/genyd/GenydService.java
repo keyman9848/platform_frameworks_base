@@ -78,15 +78,15 @@ public class GenydService extends IGenydService.Stub implements
 	public native void setBatteryLevel(int value);
 
 	public native int getBatteryMode();
-	public native void setBatteryMode();
+	public native void setBatteryMode(int mode);
     
 	public native int getBatteryStatus();
-	public native void setBatteryStatus();
+	public native void setBatteryStatus(int status);
     
     /** Gps */
 
 	public native double getGpsAccuracy();
-	public native void setGpsAccuracy();
+	public native void setGpsAccuracy(double value);
     
 	public native double getGpsAltitude();
 	public native void setGpsAltitude(double value);

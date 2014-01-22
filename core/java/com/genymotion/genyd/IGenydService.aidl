@@ -12,15 +12,15 @@ interface IGenydService {
     void setBatteryLevel(int value);
 
     int getBatteryMode();
-    void setBatteryMode();
+    void setBatteryMode(int mod);
     
     int getBatteryStatus();
-    void setBatteryStatus();
+    void setBatteryStatus(int level);
     
     /** Gps */
 
     double getGpsAccuracy();
-    void setGpsAccuracy();
+    void setGpsAccuracy(double value);
     
     double getGpsAltitude();
     void setGpsAltitude(double value);
