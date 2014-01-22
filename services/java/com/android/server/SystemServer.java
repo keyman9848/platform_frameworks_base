@@ -56,6 +56,8 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.genymotion.genyd.GenydService;
+
 class ServerThread extends Thread {
     private static final String TAG = "SystemServer";
     private final static boolean INCLUDE_DEMO = false;
@@ -436,13 +438,21 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting Recognition Service", e);
             }
-            
+
             try {
                 Slog.i(TAG, "DiskStats Service");
                 ServiceManager.addService("diskstats", new DiskStatsService(context));
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting DiskStats Service", e);
             }
+
+            try {
+                Slog.i(TAG, "Genyd Service");
+                ServiceManager.addService("Genyd", new GenydService(context));
+            } catch (Throwable e) {
+                Slog.e(TAG, "Failure starting Genyd Service", e);
+            }
+
         }
 
         // make sure the ADB_ENABLED setting value matches the secure property value
@@ -620,7 +630,7 @@ public class SystemServer
         // The system server has to run all of the time, so it needs to be
         // as efficient as possible with its memory usage.
         VMRuntime.getRuntime().setTargetHeapUtilization(0.8f);
-        
+
         System.loadLibrary("android_servers");
         init1(args);
     }
