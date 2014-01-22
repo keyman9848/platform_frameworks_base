@@ -27,7 +27,7 @@ LOCAL_C_INCLUDES += \
     libcore/include/libsuspend \
 	$(call include-path-for, libhardware)/hardware \
 	$(call include-path-for, libhardware_legacy)/hardware_legacy \
-    device/androVM/common/system/genyd/lib \
+    device/androVM/common/libgenymotion \
     bionic \
     external/stlport/stlport
 
@@ -45,8 +45,11 @@ LOCAL_SHARED_LIBRARIES := \
     libskia \
     libgui \
     libusbhost \
-    libsuspend \
-    libgenyd
+    libsuspend
+
+LOCAL_STATIC_LIBRARIES := \
+    libgenymotion \
+    libstlport_static
 
 ifeq ($(WITH_MALLOC_LEAK_CHECK),true)
     LOCAL_CFLAGS += -DMALLOC_LEAK_CHECK

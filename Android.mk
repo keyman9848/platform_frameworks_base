@@ -214,7 +214,6 @@ LOCAL_SRC_FILES += \
 	voip/java/android/net/sip/ISipSessionListener.aidl \
 	voip/java/android/net/sip/ISipService.aidl \
 	core/java/com/genymotion/genyd/IGenydService.aidl \
-#
 
 
 # FRAMEWORKS_BASE_JAVA_SRC_DIRS comes from build/core/pathmap.mk
