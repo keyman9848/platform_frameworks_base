@@ -50,7 +50,7 @@ interface IGenydService {
     
     /** Phone */
     
-    sendSms(String source, String msg);
+    void sendSms(String source, String msg);
     void PhoneCall(String source);
     
     /** Radio **/

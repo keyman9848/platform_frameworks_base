@@ -68,11 +68,63 @@ public class GenydService extends IGenydService.Stub implements
 
 	private native void setHostClipboard(String text);
 
+    /** Error */
+    
+	public native int getError();
+
+    /** Battery */
+    
+	public native int getBatteryLevel();
+	public native void setBatteryLevel(int value);
+
+	public native int getBatteryMode();
+	public native void setBatteryMode();
+    
+	public native int getBatteryStatus();
+	public native void setBatteryStatus();
+    
+    /** Gps */
+
+	public native double getGpsAccuracy();
+	public native void setGpsAccuracy();
+    
 	public native double getGpsAltitude();
-
 	public native void setGpsAltitude(double value);
-
+    
+	public native double getGpsBearing();
+	public native void setGpsBearing(double value);
+    
+	public native double getGpsLatitude();
+	public native void setGpsLatitude(double value);
+    
+	public native double getGpsLongitude();
+	public native void setGpsLongitude(double value);
+    
 	public native boolean getGpsStatus();
-
 	public native void setGpsStatus(boolean value);
+    
+    /** Android Id */
+    
+	public native String getAndroidId();
+	public native void setAndroidId(String id);
+	public native void setRandomAndroidId();
+    
+    /** Orientation */
+    
+	public native int getOrientationAngle();
+	public native void setOrientationAngle(int angle);
+    
+    /** Phone */
+    
+	public native void sendSms(String source, String msg);
+	public native void PhoneCall(String source);
+    
+    /** Radio **/
+    
+	public native int getPhoneType();
+	public native void setPhoneType(int type);
+    
+	public native String getDeviceId();
+	public native void setDeviceId(String id);
+	public native void setRandomDeviceId();
 }
