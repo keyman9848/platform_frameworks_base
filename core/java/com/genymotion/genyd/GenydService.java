@@ -8,8 +8,7 @@ import android.util.Log;
 import android.content.ClipboardManager;
 import android.content.Context;
 
-public class GenydService extends IGenydService.Stub implements
-		ClipboardManager.OnPrimaryClipChangedListener {
+public class GenydService extends IGenydService.Stub implements ClipboardManager.OnPrimaryClipChangedListener {
 
 	private static final String TAG = "GenydService";
 	private ClipboardManager clipboardManager;
@@ -22,7 +21,7 @@ public class GenydService extends IGenydService.Stub implements
 
 	public GenydService(Context context) {
 		Log.d(TAG, "GenydService startup");
-		
+
 		myContext = context;
 
 		clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -68,62 +67,62 @@ public class GenydService extends IGenydService.Stub implements
 
 	private native void setHostClipboard(String text);
 
-    /** Error */
-    
+	/** Error */
+
 	public native int getError();
 
-    /** Battery */
-    
+	/** Battery */
+
 	public native int getBatteryLevel();
 	public native void setBatteryLevel(int value);
 
 	public native int getBatteryMode();
 	public native void setBatteryMode(int mode);
-    
+
 	public native int getBatteryStatus();
 	public native void setBatteryStatus(int status);
-    
-    /** Gps */
+
+	/** Gps */
 
 	public native double getGpsAccuracy();
 	public native void setGpsAccuracy(double value);
-    
+
 	public native double getGpsAltitude();
 	public native void setGpsAltitude(double value);
-    
+
 	public native double getGpsBearing();
 	public native void setGpsBearing(double value);
-    
+
 	public native double getGpsLatitude();
 	public native void setGpsLatitude(double value);
-    
+
 	public native double getGpsLongitude();
 	public native void setGpsLongitude(double value);
-    
+
 	public native boolean getGpsStatus();
 	public native void setGpsStatus(boolean value);
-    
-    /** Android Id */
-    
+
+	/** Android Id */
+
 	public native String getAndroidId();
 	public native void setAndroidId(String id);
 	public native void setRandomAndroidId();
-    
-    /** Orientation */
-    
+
+	/** Orientation */
+
 	public native int getOrientationAngle();
 	public native void setOrientationAngle(int angle);
-    
-    /** Phone */
-    
+
+	/** Phone */
+
 	public native void sendSms(String source, String msg);
 	public native void PhoneCall(String source);
-    
-    /** Radio **/
-    
+
+	/** Radio **/
+
 	public native int getPhoneType();
 	public native void setPhoneType(int type);
-    
+
 	public native String getDeviceId();
 	public native void setDeviceId(String id);
 	public native void setRandomDeviceId();
