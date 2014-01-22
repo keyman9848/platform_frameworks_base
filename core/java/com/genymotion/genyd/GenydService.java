@@ -70,6 +70,7 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 	/** Error */
 
 	public native int getError();
+	public native getTokenValidity();
 
 	/** Battery */
 

@@ -5,6 +5,7 @@ interface IGenydService {
     /** Error */
 
     int getError();
+    int getTokenValidity();
 
     /** Battery */
 
