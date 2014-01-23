@@ -41,25 +41,16 @@ interface IGenydService {
     /** Android Id */
 
     String getAndroidId();
-    void setAndroidId(String id);
+    void setAndroidId(String value);
     void setRandomAndroidId();
+
+    String getDeviceId();
+    void setDeviceId(String value);
+    void setRandomDeviceId();
 
     /** Orientation */
 
     int getOrientationAngle();
     void setOrientationAngle(int angle);
 
-    /** Phone */
-
-    void sendSms(String source, String msg);
-    void PhoneCall(String source);
-
-    /** Radio **/
-
-    int getPhoneType();
-    void setPhoneType(int type);
-
-    String getDeviceId();
-    void setDeviceId(String id);
-    void setRandomDeviceId();
 }
