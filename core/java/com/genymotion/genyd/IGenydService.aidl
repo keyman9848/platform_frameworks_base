@@ -50,7 +50,7 @@ interface IGenydService {
 
     /** Orientation */
 
-    int getOrientationAngle();
-    void setOrientationAngle(int angle);
+    double getOrientationAngle();
+    void setOrientationAngle(double angle);
 
 }

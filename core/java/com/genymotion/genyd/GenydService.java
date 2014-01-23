@@ -115,7 +115,7 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 
 	/** Orientation */
 
-	public native int getOrientationAngle();
-	public native void setOrientationAngle(int angle);
+	public native double getOrientationAngle();
+	public native void setOrientationAngle(double angle);
 
 }
