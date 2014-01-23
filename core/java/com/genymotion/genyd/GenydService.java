@@ -75,7 +75,7 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 	/** Battery */
 
 	public native int getBatteryLevel();
-	public native void setBatteryLevel(int value);
+	public native void setBatteryLevel(int level);
 
 	public native int getBatteryMode();
 	public native void setBatteryMode(int mode);
@@ -109,22 +109,13 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 	public native void setAndroidId(String id);
 	public native void setRandomAndroidId();
 
+	public native String getDeviceId();
+	public native void setDeviceId(String id);
+	public native void setRandomDeviceId();
+
 	/** Orientation */
 
 	public native int getOrientationAngle();
 	public native void setOrientationAngle(int angle);
 
-	/** Phone */
-
-	public native void sendSms(String source, String msg);
-	public native void PhoneCall(String source);
-
-	/** Radio **/
-
-	public native int getPhoneType();
-	public native void setPhoneType(int type);
-
-	public native String getDeviceId();
-	public native void setDeviceId(String id);
-	public native void setRandomDeviceId();
 }
