@@ -1,19 +1,20 @@
 package com.genymotion.genyd;
 
-//import android.app.Service;
-import android.content.ClipData;
-//import android.content.Intent;
-//import android.os.IBinder;
+import android.app.Service;
+import android.os.IBinder;
 import android.util.Log;
-import android.content.ClipboardManager;
+import android.text.ClipboardManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 
-public class GenydService extends IGenydService.Stub implements
-		ClipboardManager.OnPrimaryClipChangedListener {
+public class GenydService extends Service {
 
-	private static final String TAG = "GenydService";
+	private BroadcastReceiver receiver;
+	private IntentFilter filter;
 	private ClipboardManager clipboardManager;
-	private Context myContext;
+	private Boolean stopRecursion;
 
 	static {
 		Log.d(TAG, "Loading genyd library");
@@ -22,33 +23,32 @@ public class GenydService extends IGenydService.Stub implements
 
 	public GenydService(Context context) {
 		Log.d(TAG, "GenydService startup");
-		
-		myContext = context;
 
-		clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-		clipboardManager.addPrimaryClipChangedListener(this);
+		stopRecursion = false;
+		registerReceiver(receiver, filter);
 
-		new Thread(new GenydThread()).start();
+		clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		filter = new IntentFilter("com.genymotion.clipboardproxy.CLIP_CHANGED");
+		receiver = new myBroadcastReceiver();
 	}
 
-	@Override
-	public void onPrimaryClipChanged() {
+		class myBroadcastReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals("com.genymotion.clipboardproxy.CLIP_CHANGED")) {
+				synchronized (stopRecursion) {
+					if (!stopRecursion) {
+						if (clipboardManager.hasText()) {
+							setHostClipboard(clipboardManager.getText().toString());
 
-		if (clipboardManager.hasPrimaryClip()) {
-			ClipData data = clipboardManager.getPrimaryClip();
-
-			CharSequence label = data.getDescription().getLabel();
-			if (label == null
-					|| (label != null && !label.toString().equals(TAG))) {
-
-				ClipData.Item item = data.getItemAt(0);
-				String clipboardText = item.coerceToText(myContext).toString();
-				setHostClipboard(clipboardText);
-
-				Log.d(TAG, "onPrimaryClipChanged");
+							Log.d("GenydService", "onPrimaryClipChanged");
+						}
+					} else {
+						stopRecursion = false;
+					}
+				}
 			}
 		}
-
 	}
 
 	private native void startGenyd();
@@ -62,8 +62,11 @@ public class GenydService extends IGenydService.Stub implements
 	}
 
 	private void setAndroidClipboard(String text) {
-		Log.d(TAG, "Set clipboard");
-		clipboardManager.setPrimaryClip(ClipData.newPlainText(TAG, text));
+		synchronized (stopRecursion) {
+			Log.d(TAG, "Set clipboard");
+			stopRecursion = true;
+			clipboardManager.setText(text);
+		}
 	}
 
 	private native void setHostClipboard(String text);
