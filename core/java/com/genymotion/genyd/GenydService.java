@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-public class GenydService extends Service {
+public class GenydService extends IGenydService.Stub {
 
 	private BroadcastReceiver receiver;
 	private IntentFilter filter;
@@ -25,14 +25,14 @@ public class GenydService extends Service {
 		Log.d("GenydService", "GenydService startup");
 
 		stopRecursion = false;
-		registerReceiver(receiver, filter);
 
 		clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 		filter = new IntentFilter("com.genymotion.clipboardproxy.CLIP_CHANGED");
 		receiver = new myBroadcastReceiver();
+		registerReceiver(receiver, filter);
 	}
 
-		class myBroadcastReceiver extends BroadcastReceiver {
+	class myBroadcastReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals("com.genymotion.clipboardproxy.CLIP_CHANGED")) {

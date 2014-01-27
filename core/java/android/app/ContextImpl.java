@@ -1240,7 +1240,7 @@ class ContextImpl extends Context {
         return mNfcManager;
     }
 
-    private NfcManager getGenymotionService() {
+    private IGenydService getGenymotionService() {
         synchronized (mSync) {
             if (mGenymotionService == null) {
                 IBinder b = ServiceManager.getService("Genyd");
