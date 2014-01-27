@@ -17,12 +17,12 @@ public class GenydService extends Service {
 	private Boolean stopRecursion;
 
 	static {
-		Log.d(TAG, "Loading genyd library");
+		Log.d("GenydService", "Loading genyd library");
 		System.loadLibrary("genyd");
 	}
 
 	public GenydService(Context context) {
-		Log.d(TAG, "GenydService startup");
+		Log.d("GenydService", "GenydService startup");
 
 		stopRecursion = false;
 		registerReceiver(receiver, filter);
@@ -56,14 +56,14 @@ public class GenydService extends Service {
 	private class GenydThread implements Runnable {
 		@Override
 		public void run() {
-			Log.d(TAG, "starting genyd");
+			Log.d("GenydService", "starting genyd");
 			startGenyd();
 		}
 	}
 
 	private void setAndroidClipboard(String text) {
 		synchronized (stopRecursion) {
-			Log.d(TAG, "Set clipboard");
+			Log.d("GenydService", "Set clipboard");
 			stopRecursion = true;
 			clipboardManager.setText(text);
 		}
