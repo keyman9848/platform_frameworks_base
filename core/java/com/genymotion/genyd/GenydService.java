@@ -1,7 +1,5 @@
 package com.genymotion.genyd;
 
-import android.app.Service;
-import android.os.IBinder;
 import android.util.Log;
 import android.text.ClipboardManager;
 import android.content.BroadcastReceiver;
@@ -11,6 +9,7 @@ import android.content.IntentFilter;
 
 public class GenydService extends IGenydService.Stub {
 
+	private static final String TAG = "GenydService";
 	private BroadcastReceiver receiver;
 	private IntentFilter filter;
 	private ClipboardManager clipboardManager;
@@ -22,14 +21,14 @@ public class GenydService extends IGenydService.Stub {
 	}
 
 	public GenydService(Context context) {
-		Log.d("GenydService", "GenydService startup");
+		Log.d(TAG, "GenydService startup");
 
 		stopRecursion = false;
 
-		clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+		clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
 		filter = new IntentFilter("com.genymotion.clipboardproxy.CLIP_CHANGED");
 		receiver = new myBroadcastReceiver();
-		registerReceiver(receiver, filter);
+		context.registerReceiver(receiver, filter);
 	}
 
 	class myBroadcastReceiver extends BroadcastReceiver {
@@ -41,7 +40,7 @@ public class GenydService extends IGenydService.Stub {
 						if (clipboardManager.hasText()) {
 							setHostClipboard(clipboardManager.getText().toString());
 
-							Log.d("GenydService", "onPrimaryClipChanged");
+							Log.d(TAG, "onPrimaryClipChanged");
 						}
 					} else {
 						stopRecursion = false;
@@ -56,14 +55,14 @@ public class GenydService extends IGenydService.Stub {
 	private class GenydThread implements Runnable {
 		@Override
 		public void run() {
-			Log.d("GenydService", "starting genyd");
+			Log.d(TAG, "starting genyd");
 			startGenyd();
 		}
 	}
 
 	private void setAndroidClipboard(String text) {
 		synchronized (stopRecursion) {
-			Log.d("GenydService", "Set clipboard");
+			Log.d(TAG, "Set clipboard");
 			stopRecursion = true;
 			clipboardManager.setText(text);
 		}
@@ -71,11 +70,54 @@ public class GenydService extends IGenydService.Stub {
 
 	private native void setHostClipboard(String text);
 
-	public native double getGpsAltitude();
+	/** Error */
 
+	public native int getError();
+	public native int getTokenValidity();
+
+	/** Battery */
+
+	public native int getBatteryLevel();
+	public native void setBatteryLevel(int level);
+
+	public native int getBatteryMode();
+	public native void setBatteryMode(int mode);
+
+	public native int getBatteryStatus();
+	public native void setBatteryStatus(int status);
+
+	/** Gps */
+
+	public native double getGpsAccuracy();
+	public native void setGpsAccuracy(double value);
+
+	public native double getGpsAltitude();
 	public native void setGpsAltitude(double value);
 
-	public native boolean getGpsStatus();
+	public native double getGpsBearing();
+	public native void setGpsBearing(double value);
 
+	public native double getGpsLatitude();
+	public native void setGpsLatitude(double value);
+
+	public native double getGpsLongitude();
+	public native void setGpsLongitude(double value);
+
+	public native boolean getGpsStatus();
 	public native void setGpsStatus(boolean value);
+
+	/** Android Id */
+
+	public native String getAndroidId();
+	public native void setAndroidId(String id);
+	public native void setRandomAndroidId();
+
+	public native String getDeviceId();
+	public native void setDeviceId(String id);
+	public native void setRandomDeviceId();
+
+	/** Orientation */
+
+	public native double getOrientationAngle();
+	public native void setOrientationAngle(double angle);
 }
