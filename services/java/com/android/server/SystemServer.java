@@ -77,6 +77,8 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.genymotion.genyd.GenydService;
+
 class ServerThread {
     private static final String TAG = "SystemServer";
     private static final String ENCRYPTING_STATE = "trigger_restart_min_framework";
@@ -815,6 +817,13 @@ class ServerThread {
                 } catch (Throwable e) {
                     reportWtf("starting MediaRouterService", e);
                 }
+            }
+  
+            try {
+                Slog.i(TAG, "Genyd Service");
+                ServiceManager.addService("Genyd", new GenydService(context));
+            } catch (Throwable e) {
+                Slog.e(TAG, "Failure starting Genyd Service", e);
             }
         }
 

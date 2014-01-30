@@ -30,7 +30,7 @@ LOCAL_C_INCLUDES += \
     libcore/include/libsuspend \
 	$(call include-path-for, libhardware)/hardware \
 	$(call include-path-for, libhardware_legacy)/hardware_legacy \
-    device/androVM/common/system/genyd/lib \
+    device/androVM/common/libgenymotion \
     bionic \
     external/stlport/stlport
 
@@ -54,7 +54,10 @@ LOCAL_SHARED_LIBRARIES := \
     libsuspend \
     libEGL \
     libGLESv2 \
-    libgenyd
+
+LOCAL_STATIC_LIBRARIES := \
+    libgenymotion \
+    libstlport_static
 
 LOCAL_CFLAGS += -DEGL_EGLEXT_PROTOTYPES -DGL_GLEXT_PROTOTYPES
 

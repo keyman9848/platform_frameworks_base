@@ -127,6 +127,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.genymotion.genyd.IGenydService;
+
 class ReceiverRestrictedContext extends ContextWrapper {
     ReceiverRestrictedContext(Context base) {
         super(base);
@@ -586,6 +588,12 @@ class ContextImpl extends Context {
         registerService(CONSUMER_IR_SERVICE, new ServiceFetcher() {
             public Object createService(ContextImpl ctx) {
                 return new ConsumerIrManager(ctx);
+            }});
+ 
+        registerService("Genyd", new ServiceFetcher() {
+            public Object createService(ContextImpl ctx) {
+                IBinder b = ServiceManager.getService("Genyd");
+                return IGenydService.Stub.asInterface(b);
             }});
     }
 
