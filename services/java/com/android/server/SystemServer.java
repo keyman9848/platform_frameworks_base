@@ -74,6 +74,8 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.genymotion.genyd.GenydService;
+
 class ServerThread extends Thread {
     private static final String TAG = "SystemServer";
     private static final String ENCRYPTING_STATE = "trigger_restart_min_framework";
@@ -749,7 +751,14 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 reportWtf("starting IdleMaintenanceService", e);
             }
-        }
+ 
+            try {
+                Slog.i(TAG, "Genyd Service");
+                ServiceManager.addService("Genyd", new GenydService(context));
+            } catch (Throwable e) {
+                Slog.e(TAG, "Failure starting Genyd Service", e);
+            }
+         }
 
         // Before things start rolling, be sure we have decided whether
         // we are in safe mode.
