@@ -52,7 +52,7 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 	private class GenydThread implements Runnable {
 		@Override
 		public void run() {
-			Log.d(TAG, "starting genyd");
+			Log.d(TAG, "Starting Genyd thread");
 			startGenyd();
 		}
 	}
