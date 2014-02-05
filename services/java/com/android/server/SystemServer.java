@@ -772,7 +772,7 @@ class ServerThread {
                 }
             }
 
-            if (!disableNonCoreServices && 
+            if (!disableNonCoreServices &&
                 context.getResources().getBoolean(R.bool.config_dreamsSupported)) {
                 try {
                     Slog.i(TAG, "Dreams Service");
@@ -818,10 +818,12 @@ class ServerThread {
                     reportWtf("starting MediaRouterService", e);
                 }
             }
-  
+
             try {
                 Slog.i(TAG, "Genyd Service");
-                ServiceManager.addService("Genyd", new GenydService(context));
+                GenydService genyd = new GenydService(context);
+                genyd.isLoaded();
+                ServiceManager.addService("Genyd", genyd);
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting Genyd Service", e);
             }

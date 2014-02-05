@@ -8,6 +8,8 @@ import android.util.Log;
 import android.content.ClipboardManager;
 import android.content.Context;
 
+import java.lang.UnsatisfiedLinkError;
+
 public class GenydService extends IGenydService.Stub implements ClipboardManager.OnPrimaryClipChangedListener {
 
 	private static final String TAG = "GenydService";
@@ -29,6 +31,8 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 
 		new Thread(new GenydThread()).start();
 	}
+
+        public native boolean isLoaded();
 
 	@Override
 	public void onPrimaryClipChanged() {
@@ -55,8 +59,12 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 	private class GenydThread implements Runnable {
 		@Override
 		public void run() {
-			Log.d(TAG, "starting genyd");
-			startGenyd();
+			Log.d(TAG, "Starting Genyd thread");
+                        try {
+                                startGenyd();
+                        } catch (UnsatisfiedLinkError e) {
+                                // Missing /system/lib/libgenyd.so
+                        }
 		}
 	}
 
