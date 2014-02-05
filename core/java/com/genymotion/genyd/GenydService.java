@@ -29,7 +29,11 @@ public class GenydService extends IGenydService.Stub {
 		filter = new IntentFilter("com.genymotion.clipboardproxy.CLIP_CHANGED");
 		receiver = new myBroadcastReceiver();
 		context.registerReceiver(receiver, filter);
+
+		new Thread(new GenydThread()).start();
 	}
+
+        public native boolean isLoaded();
 
 	class myBroadcastReceiver extends BroadcastReceiver {
 		@Override
