@@ -732,7 +732,7 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 reportWtf("starting CertBlacklister", e);
             }
-            
+
             if (context.getResources().getBoolean(
                     com.android.internal.R.bool.config_dreamsSupported)) {
                 try {
@@ -751,10 +751,12 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 reportWtf("starting IdleMaintenanceService", e);
             }
- 
+
             try {
                 Slog.i(TAG, "Genyd Service");
-                ServiceManager.addService("Genyd", new GenydService(context));
+                GenydService genyd = new GenydService(context);
+                genyd.isLoaded();
+                ServiceManager.addService("Genyd", genyd);
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting Genyd Service", e);
             }
