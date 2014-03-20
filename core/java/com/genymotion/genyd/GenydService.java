@@ -6,10 +6,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
-import android.media.RingtoneManager;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 
 public class GenydService extends IGenydService.Stub {
 
@@ -62,9 +61,8 @@ public class GenydService extends IGenydService.Stub {
 	}
 
         private void displayErrorNotification(String title, String message) {
-                 Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                  Notification notif = new Notification(android.R.drawable.stat_notify_error, title, System.currentTimeMillis());
-                 notif.setLatestEventInfo(myContext, title, message, null);
+                 notif.setLatestEventInfo(myContext, title, message, PendingIntent.getBroadcast(myContext, 0, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT));
 
                  NotificationManager notificationManager = (NotificationManager) myContext.getSystemService(Context.NOTIFICATION_SERVICE);
                  // hide the notification after its selected
