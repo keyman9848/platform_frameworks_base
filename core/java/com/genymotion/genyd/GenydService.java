@@ -6,6 +6,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
+import android.media.RingtoneManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 
 public class GenydService extends IGenydService.Stub {
 
@@ -14,6 +18,7 @@ public class GenydService extends IGenydService.Stub {
 	private IntentFilter filter;
 	private ClipboardManager clipboardManager;
 	private Boolean stopRecursion;
+        private Context myContext;
 
 	static {
 		Log.d("GenydService", "Loading genyd library");
@@ -29,6 +34,8 @@ public class GenydService extends IGenydService.Stub {
 		filter = new IntentFilter("com.genymotion.clipboardproxy.CLIP_CHANGED");
 		receiver = new myBroadcastReceiver();
 		context.registerReceiver(receiver, filter);
+
+                myContext = context;
 
 		new Thread(new GenydThread()).start();
 	}
@@ -53,6 +60,17 @@ public class GenydService extends IGenydService.Stub {
 			}
 		}
 	}
+
+        private void displayErrorNotification(String title, String message) {
+                 Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                 Notification notif = new Notification(android.R.drawable.stat_notify_error, title, System.currentTimeMillis());
+                 notif.setLatestEventInfo(myContext, title, message, null);
+
+                 NotificationManager notificationManager = (NotificationManager) myContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                 // hide the notification after its selected
+                 notif.flags |= Notification.FLAG_AUTO_CANCEL;
+                 notificationManager.notify(0, notif);
+        }
 
 	private native void startGenyd();
 
