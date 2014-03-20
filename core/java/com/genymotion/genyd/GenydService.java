@@ -7,6 +7,10 @@ import android.content.ClipData;
 import android.util.Log;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.net.Uri;
+import android.media.RingtoneManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 
 import java.lang.UnsatisfiedLinkError;
 
@@ -71,6 +75,20 @@ public class GenydService extends IGenydService.Stub implements ClipboardManager
 	private void setAndroidClipboard(String text) {
 		Log.d(TAG, "Set clipboard");
 		clipboardManager.setPrimaryClip(ClipData.newPlainText(TAG, text));
+	}
+
+        private void displayErrorNotification(String title, String message) {
+            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Notification notif = new Notification.Builder(myContext)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setSmallIcon(android.R.drawable.stat_notify_error)
+                .setSound(soundUri)
+                .build();
+            NotificationManager notificationManager = (NotificationManager) myContext.getSystemService(Context.NOTIFICATION_SERVICE);
+            // hide the notification after its selected
+            notif.flags |= Notification.FLAG_AUTO_CANCEL | Notification.PRIORITY_HIGH;
+            notificationManager.notify(0, notif);
 	}
 
 	private native void setHostClipboard(String text);
