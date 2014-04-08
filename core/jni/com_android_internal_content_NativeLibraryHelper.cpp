@@ -333,9 +333,10 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
         const char* cpuAbiOffset = fileName + APK_LIB_LEN;
         const size_t cpuAbiRegionSize = lastSlash - cpuAbiOffset;
 
-        // If file does not end with .so, ignore it
-        if (strncmp(fileName + fileNameLen - LIB_SUFFIX_LEN, LIB_SUFFIX, LIB_SUFFIX_LEN) != 0) {
-            ALOGV("Ignoring %s (not a .so)", fileName);
+        // If file does not end with .so or is not a gdbserver, ignore it
+        if (strncmp(fileName + fileNameLen - LIB_SUFFIX_LEN, LIB_SUFFIX, LIB_SUFFIX_LEN) != 0 &&
+            strncmp(lastSlash + 1, GDBSERVER, GDBSERVER_LEN) != 0) {
+            ALOGV("Ignoring %s (not a .so or gdbserver)", fileName);
             continue;
         }
 
@@ -370,7 +371,7 @@ iterateOverNativeFiles(JNIEnv *env, jstring javaFilePath, jstring javaCpuAbi, js
             continue;
         }
 
-        // If this is a .so file, check to see if we need to copy it.
+        // If this is a .so file or gdbserver binary, we need to copy it.
         if ((!strncmp(fileName + fileNameLen - LIB_SUFFIX_LEN, LIB_SUFFIX, LIB_SUFFIX_LEN)
                     && !strncmp(lastSlash, LIB_PREFIX, LIB_PREFIX_LEN)
                     && isFilenameSafe(lastSlash + 1))
